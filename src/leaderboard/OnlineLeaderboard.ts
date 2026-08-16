@@ -7,10 +7,7 @@ type ApiResponse = { entries?: unknown; updatedAt?: unknown; error?: unknown };
 type CacheRecord = { entries: LocalScoreEntry[]; updatedAt: string };
 
 function apiEndpoint(): string | null {
-  const configured = import.meta.env.VITE_API_BASE_URL?.trim().replace(/\/$/, '');
-  if (configured) return `${configured}/api/leaderboard`;
-  if (location.hostname.endsWith('.vercel.app') || location.hostname === 'localhost' || location.hostname === '127.0.0.1') return '/api/leaderboard';
-  return null;
+  return '/api/leaderboard';
 }
 
 function isEntry(value: unknown): value is LocalScoreEntry {

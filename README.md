@@ -52,20 +52,15 @@ DATABASE_URL=postgresql://...
 POSTGRES_URL=postgresql://...
 ```
 
-Vercel에 게임 전체를 배포하면 같은 출처의 `/api/leaderboard`를 자동 사용합니다. GitHub Pages에서 Vercel API를 호출하려면 GitHub 저장소의 Actions variable에 다음 값을 설정합니다.
-
-```text
-VITE_API_BASE_URL=https://<vercel-project>.vercel.app
-```
+Vercel에 게임 전체를 배포하면 같은 출처의 `/api/leaderboard`를 자동으로 사용합니다. 별도의 공개 API 주소를 프런트엔드에 넣을 필요가 없습니다.
 
 게임은 접속 직후 유휴 시간에 점수판을 미리 받고, 순위창을 열 때 최신 기록을 다시 확인합니다. 서버 응답이 늦거나 실패하면 브라우저 로컬 기록을 유지합니다.
 
 로컬에서 API까지 함께 시험하려면 Vercel CLI의 `vercel dev`를 사용합니다. 일반 `npm run dev`는 프런트엔드만 실행합니다.
 
-## 배포
+## Vercel 배포
 
-- Vercel: 정적 게임과 `api/leaderboard.ts`를 함께 배포합니다.
-- GitHub Pages: `.github/workflows/deploy.yml`이 정적 `dist`를 배포합니다. 온라인 점수판에는 위 `VITE_API_BASE_URL` 설정이 필요합니다.
+`main` 브랜치를 Vercel 프로젝트에 연결하면 정적 게임과 `api/leaderboard.ts`가 함께 배포됩니다. Neon 연동으로 생성된 `DATABASE_URL` 또는 `POSTGRES_URL` 환경변수만 있으면 됩니다.
 
 ## 저장과 검증
 
