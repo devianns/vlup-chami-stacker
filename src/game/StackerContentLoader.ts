@@ -1,5 +1,7 @@
 import type { StackerGameProtocol, StackerPieceDefinition } from '../types';
 
+const CONTENT_REQUEST_TIMEOUT_MS = 12_000;
+
 export class ContentError extends Error {
   constructor(public issues: string[]) {
     super(`게임 설정 오류 ${issues.length}개`);
@@ -7,25 +9,21 @@ export class ContentError extends Error {
 }
 
 export async function loadStackerContent(url = './game-data/stacker.json'): Promise<StackerGameProtocol> {
-  const response = await fetch(url, { cache: 'no-cache' });
-  if (!response.ok) throw new Error(`게임 설정을 불러오지 못했습니다. (${response.status})`);
-  const data = await response.json() as StackerGameProtocol;
-  const issues = validateStackerContent(data);
-  if (!issues.length) issues.push(...await validateAssets(data));
-  if (issues.length) throw new ContentError(issues);
-  return data;
-}
-
-async function validateAssets(data: StackerGameProtocol): Promise<string[]> {
-  const results = await Promise.all(Object.entries(data.assets.images).map(async ([id, asset]) => {
-    try {
-      const response = await fetch(asset.src, { method: 'HEAD' });
-      return response.ok ? null : `assets.images.${id}: 파일을 찾을 수 없습니다. '${asset.src}'`;
-    } catch {
-      return `assets.images.${id}: 파일에 접근할 수 없습니다. '${asset.src}'`;
-    }
-  }));
-  return results.filter((issue): issue is string => issue !== null);
+  const controller = new AbortController();
+  const timeout = globalThis.setTimeout(() => controller.abort(), CONTENT_REQUEST_TIMEOUT_MS);
+  try {
+    const response = await fetch(url, { cache: 'no-cache', signal: controller.signal });
+    if (!response.ok) throw new Error(`게임 설정을 불러오지 못했습니다. (${response.status})`);
+    const data = await response.json() as StackerGameProtocol;
+    const issues = validateStackerContent(data);
+    if (issues.length) throw new ContentError(issues);
+    return data;
+  } catch (error) {
+    if (error instanceof DOMException && error.name === 'AbortError') throw new Error('게임 설정을 불러오는 데 시간이 너무 오래 걸리고 있어요.');
+    throw error;
+  } finally {
+    globalThis.clearTimeout(timeout);
+  }
 }
 
 function validatePiece(id: string, piece: StackerPieceDefinition, data: StackerGameProtocol, issues: string[]): void {
@@ -74,7 +72,7 @@ export function validateStackerContent(data: StackerGameProtocol): string[] {
   if (!(data.physics.gravityY > 0) || !(data.physics.wallThickness > 0) || data.physics.settleVelocity < 0 || data.physics.settleMs < 0) issues.push('physics: 중력, 벽 두께, 안정화 기준이 유효해야 합니다.');
   if (!Number.isSafeInteger(data.stacking.nextPreviewCount) || data.stacking.nextPreviewCount < 1) issues.push('stacking.nextPreviewCount: 1 이상의 정수여야 합니다.');
   if (!Number.isSafeInteger(data.stacking.maxPackingBonus) || data.stacking.maxPackingBonus < 0) issues.push('stacking.maxPackingBonus: 0 이상의 정수여야 합니다.');
-  if (Object.values(data.pieces).some((piece) => !piece || piece.points <= data.stacking.maxPackingBonus)) issues.push('pieces.points: 모든 크기 점수는 최대 밀집도 보너스보다 커야 합니다.');
+  if (Object.values(data.pieces).some((piece) => !piece || piece.points <= data.stacking.maxPackingBonus)) issues.push('pieces.points: 모든 크기 점수는 최대 낮게 넣기 보너스보다 커야 합니다.');
   if (!data.stacking?.bag?.length) issues.push('stacking.bag: 랜덤 주머니에 차미가 하나 이상 필요합니다.');
   data.stacking?.bag?.forEach((id) => { if (!data.pieces[id]) issues.push(`stacking.bag: 존재하지 않는 차미 '${id}'`); });
   (['start', 'drop', 'milestone', 'danger', 'gameOver'] as const).forEach((key) => {
