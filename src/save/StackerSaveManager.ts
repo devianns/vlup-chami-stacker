@@ -33,10 +33,10 @@ export class StackerSaveManager {
   submitScore(nicknameInput: string, state: StackerRunState): LocalScoreEntry[] {
     const nickname = [...nicknameInput.normalize('NFKC').replace(/[<>\u0000-\u001f]/g, '').trim()].slice(0, 12).join('');
     if (this.load().leaderboard.some((entry) => entry.runSeed === state.runSeed)) {
-      throw new Error('이미 등록한 게임입니다.');
+      throw new Error('이 기록은 이미 저장했어요.');
     }
-    if (!nickname) throw new Error('닉네임을 1자 이상 입력해 주세요.');
-    if (!isValidFinalScore(state)) throw new Error('검증할 수 없는 점수입니다.');
+    if (!nickname) throw new Error('닉네임을 한 글자 이상 입력해 주세요.');
+    if (!isValidFinalScore(state)) throw new Error('점수 정보를 확인할 수 없어요. 다시 플레이해 주세요.');
     const playedAt = new Date().toISOString();
     const payload = [nickname, state.score, state.pieceScore, state.heightBonus, state.comboBonus, state.height, state.drops, state.runSeed, this.content.game.version, playedAt].join('|');
     const entry: LocalScoreEntry = {
