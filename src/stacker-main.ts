@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import './fonts.css';
-import './stacker.css';
+import './stacker-ui.css';
 import { ContentError, loadStackerContent } from './game/StackerContentLoader';
 import { StackerScene } from './game/StackerScene';
 import { StackerSaveManager } from './save/StackerSaveManager';
@@ -17,7 +17,9 @@ document.body.innerHTML = `
       <h1 id="title-logo"><span>차미 쌓기</span><strong>게임!</strong></h1>
       <p id="title-description">말랑한 차미를 아슬아슬 쌓아 보세요!</p>
       <button id="enter-game" type="button" disabled><span>준비 중…</span><i>▶</i></button>
-      <button id="title-sound" class="sound-toggle title-sound" type="button" aria-pressed="false"><i>🔇</i><span>소리 켜기</span></button>
+      <button id="title-sound" class="sound-toggle title-sound" type="button" aria-pressed="false">
+        <i aria-hidden="true"><svg viewBox="0 0 24 24"><path class="speaker" d="M4 9v6h4l5 4V5L8 9H4z"/><path class="sound-wave" d="M16 8.5c1.6 1.9 1.6 5.1 0 7M18.8 6c3 3.4 3 8.6 0 12"/><path class="mute-slash" d="M4 4l16 16"/></svg></i><span>소리 켜기</span>
+      </button>
       <button id="title-ranking" class="title-ranking" type="button" disabled>🏆 전체 순위표 보기</button>
       <button id="title-notice" class="title-notice" type="button" disabled>ⓘ 팬게임 이용 안내</button>
       <small>CLICK / ENTER</small>
@@ -44,30 +46,36 @@ document.body.innerHTML = `
         <div><span>최고점</span><strong id="best-score">0</strong></div>
         <div><span>밀집도</span><strong><b id="packing-rate">0</b>%</strong></div>
       </aside>
-      <div class="stage-wrap">
-        <div id="game" aria-label="차미 스태커 게임 화면"></div>
-        <div id="loading" class="loading">게임 데이터를 검사하고 있어요…</div>
-        <div id="game-over" class="game-over hidden" role="dialog" aria-modal="true" aria-labelledby="result-title">
-          <div class="result-card">
-            <span id="result-reason" class="result-kicker">와르르…!</span>
-            <h2 id="result-title">이번 차미탑은 여기까지!</h2>
-            <strong id="result-score">0</strong><small>FINAL SCORE</small>
-            <dl class="score-breakdown">
-              <div><dt>차미 크기 점수</dt><dd id="result-base-score">0</dd></div>
-              <div><dt>빈틈 보너스</dt><dd id="result-packing-bonus">0</dd></div>
-              <div><dt>평균 밀집도</dt><dd id="result-packing-rate">0%</dd></div>
-            </dl>
-            <p>차미 <b id="result-drops">0</b>개 · 높이 <b id="result-height">0</b>cm</p>
-            <label class="nickname-field"><span>기록에 남길 닉네임</span><input id="nickname" maxlength="12" autocomplete="nickname" placeholder="1~12자로 입력해 주세요" /></label>
-            <button id="register-score" class="primary-result" type="button">전체 순위표에 등록하기</button>
-            <em id="register-status" aria-live="polite"></em>
-            <div class="result-actions"><button id="restart" type="button">다시 쌓기</button><button id="result-ranking" type="button">전체 순위표</button></div>
+      <div class="stage-cell">
+        <div class="stage-wrap">
+          <div id="game" aria-label="차미 스태커 게임 화면"></div>
+          <div id="loading" class="loading">게임 데이터를 검사하고 있어요…</div>
+          <div id="game-over" class="game-over hidden" role="dialog" aria-modal="true" aria-labelledby="result-title">
+            <div class="result-card">
+              <span id="result-reason" class="result-kicker">와르르…!</span>
+              <h2 id="result-title">이번 차미탑은 여기까지!</h2>
+              <strong id="result-score">0</strong><small>FINAL SCORE</small>
+              <dl class="score-breakdown">
+                <div><dt>차미 크기 점수</dt><dd id="result-base-score">0</dd></div>
+                <div><dt>빈틈 보너스</dt><dd id="result-packing-bonus">0</dd></div>
+                <div><dt>평균 밀집도</dt><dd id="result-packing-rate">0%</dd></div>
+              </dl>
+              <p>차미 <b id="result-drops">0</b>개 · 높이 <b id="result-height">0</b>cm</p>
+              <label class="nickname-field"><span>기록에 남길 닉네임</span><input id="nickname" maxlength="12" autocomplete="nickname" placeholder="1~12자로 입력해 주세요" /></label>
+              <button id="register-score" class="primary-result" type="button">전체 순위표에 등록하기</button>
+              <em id="register-status" aria-live="polite"></em>
+              <div class="result-actions"><button id="restart" type="button">다시 쌓기</button><button id="result-ranking" type="button">전체 순위표</button></div>
+            </div>
           </div>
         </div>
       </div>
       <aside class="next-panel" aria-label="다음 차미">
         <div class="host-row">
-          <div class="presenter-stage"><img id="presenter" class="presenter" alt="시트리" /><b>시트리</b></div>
+          <div class="presenter-stage">
+            <img id="presenter" class="presenter" alt="시트리 전신 일러스트" />
+            <span class="presenter-face" aria-hidden="true"><img id="presenter-face" alt="" /></span>
+            <b>시트리</b>
+          </div>
           <section class="speech" aria-live="polite"><i></i><strong>시트리</strong><p id="message">차미를 고르는 중이에요…</p></section>
         </div>
         <div class="next-queue"><span>다음 차미</span><div id="next-pieces"></div></div>
@@ -79,9 +87,15 @@ document.body.innerHTML = `
           <span>캐릭터·배경·타이틀 등 시각 에셋 제작에 생성형 AI를 사용했습니다.</span>
         </div>
         <nav class="floating-actions" aria-label="빠른 메뉴">
-          <button id="game-sound" class="sound-toggle game-sound" type="button" aria-pressed="false" aria-label="소리 켜기"><i>🔇</i><span>소리 켜기</span></button>
-          <button id="floating-ranking" class="floating-ranking" type="button" aria-label="전체 순위표 보기"><i>🏆</i><span>전체 순위표</span></button>
-          <button id="floating-notice" class="floating-notice" type="button" aria-label="팬게임 이용 안내"><i>ⓘ</i><span>이용 안내</span></button>
+          <button id="game-sound" class="sound-toggle game-sound" type="button" aria-pressed="false" aria-label="소리 켜기">
+            <i aria-hidden="true"><svg viewBox="0 0 24 24"><path class="speaker" d="M4 9v6h4l5 4V5L8 9H4z"/><path class="sound-wave" d="M16 8.5c1.6 1.9 1.6 5.1 0 7M18.8 6c3 3.4 3 8.6 0 12"/><path class="mute-slash" d="M4 4l16 16"/></svg></i><span>소리</span>
+          </button>
+          <button id="floating-ranking" class="floating-ranking" type="button" aria-label="전체 순위표 보기">
+            <i aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8 4h8v3c0 3-1.7 5.4-4 6.4C9.7 12.4 8 10 8 7V4zM8 6H5v1c0 2.2 1.3 3.8 3.4 4.3M16 6h3v1c0 2.2-1.3 3.8-3.4 4.3M12 13v4M8 20h8M10 17h4"/></svg></i><span>순위표</span>
+          </button>
+          <button id="floating-notice" class="floating-notice" type="button" aria-label="팬게임 이용 안내">
+            <i aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 11v5M12 8h.01"/></svg></i><span>이용 안내</span>
+          </button>
         </nav>
       </div>
     </section>
@@ -110,6 +124,7 @@ document.body.innerHTML = `
 const element = <T extends HTMLElement>(id: string): T => document.querySelector<T>(id)!;
 let currentState: StackerRunState | null = null;
 let previousAudioState: StackerRunState | null = null;
+let renderedNextKey = '';
 const audio = new GameAudio();
 
 function updateSoundButtons(): void {
@@ -117,7 +132,6 @@ function updateSoundButtons(): void {
   document.querySelectorAll<HTMLButtonElement>('.sound-toggle').forEach((button) => {
     button.setAttribute('aria-pressed', String(enabled));
     button.setAttribute('aria-label', enabled ? '소리 끄기' : '소리 켜기');
-    button.querySelector('i')!.textContent = enabled ? '🔊' : '🔇';
     button.querySelector('span')!.textContent = enabled ? '소리 끄기' : '소리 켜기';
   });
 }
@@ -130,11 +144,21 @@ updateSoundButtons();
 async function boot(): Promise<void> {
   try {
     const content = await loadStackerContent();
+    if (content.renderer.backgroundImage) document.documentElement.style.setProperty('--page-bg', `url("${content.assets.images[content.renderer.backgroundImage].src}")`);
+    const title = content.titleScreen;
+    element<HTMLImageElement>('#title-art').src = content.assets.images[title.art].src;
+    element('#title-eyebrow').textContent = title.eyebrow;
+    element('#title-logo').innerHTML = `<span>${title.title}</span><strong>${title.accent}</strong>`;
+    element('#title-description').textContent = title.subtitle;
+    element('#game-title').textContent = content.game.title;
+    element('#game-subtitle').textContent = content.game.subtitle;
+    const sizePoints = [...new Set(Object.values(content.pieces).map((piece) => piece.points))].sort((a, b) => a - b);
+    element('#score-size-rule').textContent = `차미 크기 점수: 작은 차미 ${sizePoints[0].toLocaleString()}점 · 중간 차미 ${sizePoints[1].toLocaleString()}점 · 큰 차미 ${sizePoints[2].toLocaleString()}점`;
+    element('#score-bonus-rule').textContent = `밀집도 보너스: 차미를 낮고 촘촘하게 둘수록 0~${content.stacking.maxPackingBonus.toLocaleString()}점`;
     const saves = new StackerSaveManager(content);
     const online = new OnlineLeaderboard();
     let onlineEntries = online.cached();
     const scene = new StackerScene(content, saves.load());
-    scene.connect((state) => render(state, content), (save) => saves.save(save), () => audio.play('drop'));
     new Phaser.Game({
       type: Phaser.AUTO,
       parent: 'game',
@@ -146,28 +170,28 @@ async function boot(): Promise<void> {
       render: { antialias: true, pixelArt: false },
       scene,
     });
-    element('#game-title').textContent = content.game.title;
-    element('#game-subtitle').textContent = content.game.subtitle;
-    const sizePoints = [...new Set(Object.values(content.pieces).map((piece) => piece.points))].sort((a, b) => a - b);
-    element('#score-size-rule').textContent = `차미 크기 점수: 작은 차미 ${sizePoints[0].toLocaleString()}점 · 중간 차미 ${sizePoints[1].toLocaleString()}점 · 큰 차미 ${sizePoints[2].toLocaleString()}점`;
-    element('#score-bonus-rule').textContent = `밀집도 보너스: 차미를 낮고 촘촘하게 둘수록 0~${content.stacking.maxPackingBonus.toLocaleString()}점`;
+    await Promise.race([
+      scene.waitUntilReady(),
+      new Promise<void>((_, reject) => window.setTimeout(() => reject(new Error('게임 이미지 준비 시간이 너무 오래 걸리고 있어요.')), 30_000)),
+    ]);
+    scene.connect((state) => render(state, content), (save) => saves.save(save), () => audio.play('drop'));
     const scoreInfo = element<HTMLButtonElement>('#score-info');
     const scoreHelp = element<HTMLElement>('#score-help');
-    const closeScoreHelp = () => { scoreHelp.hidden = true; scoreInfo.setAttribute('aria-expanded', 'false'); };
+    const scorePanel = element<HTMLElement>('.score-panel');
+    const closeScoreHelp = () => {
+      scoreHelp.hidden = true;
+      scoreInfo.setAttribute('aria-expanded', 'false');
+      scorePanel.classList.remove('help-open');
+    };
     scoreInfo.onclick = (event) => {
       event.stopPropagation();
       scoreHelp.hidden = !scoreHelp.hidden;
       scoreInfo.setAttribute('aria-expanded', String(!scoreHelp.hidden));
+      scorePanel.classList.toggle('help-open', !scoreHelp.hidden);
     };
     scoreHelp.onclick = (event) => event.stopPropagation();
     document.addEventListener('click', closeScoreHelp);
     document.addEventListener('keydown', (event) => { if (event.key === 'Escape') closeScoreHelp(); });
-    if (content.renderer.backgroundImage) document.documentElement.style.setProperty('--page-bg', `url("${content.assets.images[content.renderer.backgroundImage].src}")`);
-    const title = content.titleScreen;
-    element<HTMLImageElement>('#title-art').src = content.assets.images[title.art].src;
-    element('#title-eyebrow').textContent = title.eyebrow;
-    element('#title-logo').innerHTML = `<span>${title.title}</span><strong>${title.accent}</strong>`;
-    element('#title-description').textContent = title.subtitle;
     const enter = element<HTMLButtonElement>('#enter-game');
     enter.disabled = false;
     enter.querySelector('span')!.textContent = title.cta;
@@ -235,10 +259,12 @@ async function boot(): Promise<void> {
     element<HTMLButtonElement>('#register-score').onclick = async () => {
       const button = element<HTMLButtonElement>('#register-score');
       const status = element('#register-status');
+      let localResult: 'not-attempted' | 'saved' | 'outside-top-20' = 'not-attempted';
       try {
         if (!currentState) return;
-        const rankings = saves.submitScore(element<HTMLInputElement>('#nickname').value, currentState);
-        const entry = rankings.find((candidate) => candidate.runSeed === currentState!.runSeed)!;
+        const { entry, leaderboard: rankings } = saves.submitScore(element<HTMLInputElement>('#nickname').value, currentState);
+        const localRank = rankings.findIndex((candidate) => candidate.runSeed === currentState!.runSeed);
+        localResult = localRank >= 0 ? 'saved' : 'outside-top-20';
         button.disabled = true;
         button.classList.add('is-loading');
         button.dataset.seed = currentState.runSeed;
@@ -249,11 +275,18 @@ async function boot(): Promise<void> {
           status.textContent = onlineRank >= 0 ? `온라인 기록 저장 완료! 현재 ${onlineRank + 1}위예요.` : '온라인에 기록을 저장했어요! TOP 20에도 다시 도전해 보세요.';
           audio.play('saved');
         } else {
-          status.textContent = `이 브라우저에 저장했어요. 현재 ${rankings.findIndex((candidate) => candidate.runSeed === currentState!.runSeed) + 1}위예요.`;
+          status.textContent = localRank >= 0
+            ? `이 브라우저에 저장했어요. 현재 ${localRank + 1}위예요.`
+            : '이번 기록은 이 브라우저의 TOP 20에는 들지 못했어요.';
           renderLeaderboard(rankings);
         }
       } catch (error) {
-        status.textContent = `${error instanceof Error ? error.message : '온라인에 기록을 저장하지 못했어요.'} 이 브라우저에는 기록을 보관했어요.`;
+        const localMessage = localResult === 'saved'
+          ? ' 이 브라우저에는 기록을 보관했어요.'
+          : localResult === 'outside-top-20'
+            ? ' 이번 기록은 이 브라우저의 TOP 20 밖이에요.'
+            : '';
+        status.textContent = `${error instanceof Error ? error.message : '온라인에 기록을 저장하지 못했어요.'}${localMessage}`;
         button.disabled = false;
         button.removeAttribute('data-seed');
       } finally {
@@ -271,8 +304,14 @@ async function boot(): Promise<void> {
     };
   } catch (error) {
     const issues = error instanceof ContentError ? error.issues : [error instanceof Error ? error.message : String(error)];
+    const message = `게임을 준비하지 못했어요: ${issues.join(' / ')}`;
     element('#loading').classList.add('error');
-    element('#loading').textContent = `게임 설정 오류: ${issues.join(' / ')}`;
+    element('#loading').textContent = message;
+    element('#title-description').textContent = message;
+    const retry = element<HTMLButtonElement>('#enter-game');
+    retry.disabled = false;
+    retry.querySelector('span')!.textContent = '다시 불러오기';
+    retry.onclick = () => location.reload();
   }
 }
 
@@ -292,19 +331,24 @@ function render(state: StackerRunState, content: Awaited<ReturnType<typeof loadS
   const presenterMood = state.gameOver ? 'idle' : state.nearLimit ? 'worried' : state.drops > 0 && state.drops % 5 === 0 ? 'cheer' : state.drops === 0 ? 'idle' : 'guide';
   const presenterKey = presenterMood === 'cheer' ? content.presenter.cheer : presenterMood === 'idle' ? content.presenter.idle : content.presenter.guide;
   const presenter = element<HTMLImageElement>('#presenter');
-  presenter.src = content.assets.images[presenterKey].src;
-  presenter.alt = `${content.presenter.name} 스탠딩 일러스트`;
   if (presenter.dataset.mood !== presenterMood) {
+    presenter.src = content.assets.images[presenterKey].src;
+    presenter.alt = `${content.presenter.name} 스탠딩 일러스트`;
+    element<HTMLImageElement>('#presenter-face').src = presenter.src;
     presenter.dataset.mood = presenterMood;
     presenter.classList.remove('reacting');
     void presenter.offsetWidth;
     presenter.classList.add('reacting');
   }
-  element('#next-pieces').innerHTML = state.nextPieces.map((id) => {
-    const piece = content.pieces[id];
-    const asset = content.assets.images[piece.texture];
-    return `<figure><img src="${asset.src}" alt="${piece.name}"><figcaption>${piece.name}</figcaption></figure>`;
-  }).join('');
+  const nextKey = state.nextPieces.join('|');
+  if (nextKey !== renderedNextKey) {
+    renderedNextKey = nextKey;
+    element('#next-pieces').innerHTML = state.nextPieces.map((id) => {
+      const piece = content.pieces[id];
+      const asset = content.assets.images[piece.texture];
+      return `<figure><img src="${asset.src}" alt="${piece.name}"><figcaption>${piece.name}</figcaption></figure>`;
+    }).join('');
+  }
   if (state.gameOver) {
     element('#result-reason').textContent = '차미가 빨간 선을 넘어 버렸어요!';
     element('#result-score').textContent = state.score.toLocaleString();

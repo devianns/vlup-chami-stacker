@@ -37,14 +37,26 @@ export class StackerScene extends Phaser.Scene {
   private saveData: StackerSaveData;
   private lastDropAt = 0;
   private started = false;
+  private readonly readyPromise: Promise<void>;
+  private resolveReady!: () => void;
+  private rejectReady!: (error: Error) => void;
 
   constructor(private content: StackerGameProtocol, saveData: StackerSaveData) {
     super('chami-stacker');
     this.saveData = { ...saveData };
+    this.readyPromise = new Promise<void>((resolve, reject) => {
+      this.resolveReady = resolve;
+      this.rejectReady = reject;
+    });
   }
 
   preload(): void {
-    Object.entries(this.content.assets.images).forEach(([id, asset]) => this.load.image(id, asset.src));
+    const gameTextures = new Set(Object.values(this.content.pieces).map((piece) => piece.texture));
+    if (this.content.renderer.backgroundImage) gameTextures.add(this.content.renderer.backgroundImage);
+    gameTextures.forEach((id) => this.load.image(id, this.content.assets.images[id].src));
+    this.load.once('loaderror', (file: { key?: string }) => {
+      this.rejectReady(new Error(`게임 이미지(${file.key ?? '알 수 없음'})를 불러오지 못했어요.`));
+    });
   }
 
   create(): void {
@@ -80,6 +92,7 @@ export class StackerScene extends Phaser.Scene {
 
     this.events.on('restart-run', () => this.restartRun());
     this.resetRun();
+    this.resolveReady();
   }
 
   update(time: number): void {
@@ -123,6 +136,8 @@ export class StackerScene extends Phaser.Scene {
     this.dropHandler = dropHandler;
     this.emitState();
   }
+
+  waitUntilReady(): Promise<void> { return this.readyPromise; }
 
   restartRun(): void { this.resetRun(); }
 

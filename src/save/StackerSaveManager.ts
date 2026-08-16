@@ -3,6 +3,11 @@ import { fnv1a, isValidFinalScore } from '../game/StackerScoring';
 
 const PREFIX = 'chami-stacker';
 
+export interface ScoreSubmission {
+  entry: LocalScoreEntry;
+  leaderboard: LocalScoreEntry[];
+}
+
 export class StackerSaveManager {
   constructor(private content: StackerGameProtocol) {}
 
@@ -43,10 +48,11 @@ export class StackerSaveManager {
 
   leaderboard(): LocalScoreEntry[] { return this.load().leaderboard; }
 
-  submitScore(nicknameInput: string, state: StackerRunState): LocalScoreEntry[] {
+  submitScore(nicknameInput: string, state: StackerRunState): ScoreSubmission {
     const nickname = [...nicknameInput.normalize('NFKC').replace(/[<>\u0000-\u001f]/g, '').trim()].slice(0, 12).join('');
     const existingSave = this.load();
-    if (existingSave.leaderboard.some((entry) => entry.runSeed === state.runSeed)) return existingSave.leaderboard;
+    const existingEntry = existingSave.leaderboard.find((entry) => entry.runSeed === state.runSeed);
+    if (existingEntry) return { entry: existingEntry, leaderboard: existingSave.leaderboard };
     if (!nickname) throw new Error('닉네임을 한 글자 이상 입력해 주세요.');
     const piecePoints = Object.fromEntries(Object.entries(this.content.pieces).map(([id, piece]) => [id, piece.points]));
     if (!isValidFinalScore(state, piecePoints, this.content.stacking.maxPackingBonus)) throw new Error('점수 정보를 확인할 수 없어요. 다시 플레이해 주세요.');
@@ -75,6 +81,6 @@ export class StackerSaveManager {
       .sort((a, b) => b.score - a.score || b.packingRate - a.packingRate || b.drops - a.drops || a.playedAt.localeCompare(b.playedAt))
       .slice(0, 20);
     this.save(save);
-    return save.leaderboard;
+    return { entry, leaderboard: save.leaderboard };
   }
 }

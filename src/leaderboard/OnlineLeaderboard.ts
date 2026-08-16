@@ -83,6 +83,7 @@ export class OnlineLeaderboard {
         runSeed: entry.runSeed,
         contentVersion: entry.contentVersion,
         checksum: entry.checksum,
+        playedAt: entry.playedAt,
       }),
     });
   }

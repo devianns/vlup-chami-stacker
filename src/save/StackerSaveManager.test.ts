@@ -34,8 +34,34 @@ describe('stacker save stability', () => {
 
   it('treats score submission as idempotent so an online retry is possible', () => {
     const saves = new StackerSaveManager(content);
-    expect(saves.submitScore('테스터', finalState)).toHaveLength(1);
-    expect(saves.submitScore('테스터', finalState)).toHaveLength(1);
+    expect(saves.submitScore('테스터', finalState).leaderboard).toHaveLength(1);
+    expect(saves.submitScore('테스터', finalState).leaderboard).toHaveLength(1);
+  });
+
+  it('returns the current entry even when it does not enter the local top 20', () => {
+    const saves = new StackerSaveManager(content);
+    const save = saves.create();
+    save.leaderboard = Array.from({ length: 20 }, (_, index) => ({
+      id: `high-${index}`,
+      nickname: `상위${index}`,
+      score: 20_000 + index,
+      baseScore: 20_000 + index,
+      packingBonus: 0,
+      packingRate: 0,
+      height: 100,
+      drops: 2,
+      pieceCounts: { 'round-m': 2 },
+      playedAt: new Date(2026, 0, index + 1).toISOString(),
+      runSeed: `high-run-${index}`,
+      contentVersion: content.game.version,
+      checksum: `checksum-${index}`,
+    }));
+    saves.save(save);
+
+    const submission = saves.submitScore('테스터', finalState);
+    expect(submission.leaderboard).toHaveLength(20);
+    expect(submission.entry.runSeed).toBe(finalState.runSeed);
+    expect(submission.leaderboard.some((entry) => entry.runSeed === finalState.runSeed)).toBe(false);
   });
 
   it('keeps the game usable when browser storage is blocked', () => {
