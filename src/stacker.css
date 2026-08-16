@@ -60,3 +60,55 @@ html,body{height:100%;overflow:hidden}.app-shell{height:100dvh;max-height:100dvh
   .title-copy small{margin-top:7px}
 }
 @media(max-width:900px){html,body{width:100%;max-width:100vw}.app-shell,.game-layout,.score-panel,.next-panel{width:100%;max-width:100vw;min-width:0}.game-layout>*{min-width:0}.stage-wrap{width:min(100%,calc((100dvh - 145px)*.75));height:auto;max-width:100%}.next-panel{grid-template-columns:minmax(0,1fr) 116px}.host-row,.next-queue,#next-pieces{min-width:0;overflow:hidden}.next-queue #next-pieces{gap:3px}.next-panel figure{flex:0 0 52px;width:52px}.next-panel img{max-width:100%}}
+
+/* Keep Phaser's fitted canvas inside the rounded playfield at every viewport size. */
+.stage-wrap{
+  isolation:isolate;
+  contain:paint;
+  clip-path:inset(0 round 32px 32px 17px 17px);
+}
+#game{
+  position:absolute;
+  inset:0;
+  overflow:hidden;
+  border-radius:inherit;
+  clip-path:inset(0 round 31px 31px 16px 16px);
+}
+#game canvas{
+  display:block!important;
+  max-width:100%!important;
+  max-height:100%!important;
+  border-radius:inherit;
+}
+
+@media(max-width:900px){
+  .stage-wrap{clip-path:inset(0 round 16px)}
+  #game{clip-path:inset(0 round 15px)}
+  .floating-actions button{
+    display:grid;
+    place-items:center;
+    padding:0!important;
+    line-height:1;
+    text-align:center;
+  }
+  .floating-actions button i{
+    display:block;
+    width:1.25em;
+    height:1.25em;
+    margin:0;
+    line-height:1.25em;
+    text-align:center;
+    font-style:normal;
+  }
+  .floating-actions button span{
+    position:absolute;
+    width:1px;
+    height:1px;
+    margin:-1px;
+    padding:0;
+    overflow:hidden;
+    clip:rect(0 0 0 0);
+    clip-path:inset(50%);
+    white-space:nowrap;
+  }
+}
