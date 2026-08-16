@@ -3,7 +3,7 @@
   "protocolVersion": 5,
   "game": {
     "id": "chami-stacker",
-    "title": "차미야, 거기 서도 괜찮아?",
+    "title": "차미야, 튀어나오면 안 돼!",
     "subtitle": "빨간 선을 넘지 않게 차미를 최대한 많이, 빈틈없이 넣어 보세요.",
     "version": "2.0.0"
   },
@@ -107,7 +107,7 @@
     "eyebrow": "SITRY × CHAMI",
     "title": "차미 쌓기",
     "accent": "게임!",
-    "subtitle": "빨간 선 아래 빈틈을 차미로 가득 채워 보세요!",
+    "subtitle": "말랑한 차미를 아슬아슬 쌓아 보세요!",
     "cta": "게임 시작"
   },
   "dialogue": {
