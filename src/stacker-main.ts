@@ -172,6 +172,7 @@ async function boot(): Promise<void> {
     const openGame = () => {
       const screen = element('#title-screen');
       if (screen.classList.contains('leaving')) return;
+      scene.startRun();
       screen.classList.add('leaving');
       audio.play('ui');
       window.setTimeout(() => {

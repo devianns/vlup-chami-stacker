@@ -28,7 +28,6 @@ export class StackerScene extends Phaser.Scene {
   private drops = 0;
   private pieceCounts: Record<string, number> = {};
   private dangerSince = 0;
-  private limitViolated = false;
   private gameOver = false;
   private gameOverReason: GameOverReason | null = null;
   private runSeed = '';
@@ -37,6 +36,7 @@ export class StackerScene extends Phaser.Scene {
   private message = '';
   private saveData: StackerSaveData;
   private lastDropAt = 0;
+  private started = false;
 
   constructor(private content: StackerGameProtocol, saveData: StackerSaveData) {
     super('chami-stacker');
@@ -83,8 +83,9 @@ export class StackerScene extends Phaser.Scene {
   }
 
   update(time: number): void {
-    if (this.gameOver) return;
+    if (!this.started || this.gameOver) return;
     let changed = false;
+    let settledThisFrame = false;
     for (const piece of [...this.pieces]) {
       if (piece.y > this.content.renderer.height + 140) {
         this.finishRun('limit-crossed');
@@ -94,29 +95,21 @@ export class StackerScene extends Phaser.Scene {
         const body = piece.body as MatterJS.BodyType;
         if (body.speed <= this.content.physics.settleVelocity && body.angularSpeed <= 0.035) {
           piece.counted = true;
-          const pieceTop = this.pieceTop(piece);
-          if (pieceTop < this.content.renderer.dangerY) {
-            this.limitViolated = true;
-            this.message = this.pick('danger');
-            changed = true;
-            continue;
-          }
-          this.drops += 1;
-          this.pieceCounts[piece.pieceId!] = (this.pieceCounts[piece.pieceId!] ?? 0) + 1;
-          this.packingQualitySum += placementQuality(pieceTop, this.content.renderer.dangerY, this.content.renderer.floorY);
-          this.baseScore += this.content.pieces[piece.pieceId!].points;
-          this.packingBonus = packingBonusFor(this.packingQualitySum, this.drops, this.content.stacking.maxPackingBonus);
-          this.packingRate = Math.round(this.packingQualitySum / this.drops / 10);
-          this.score = weightedTotalScore(this.baseScore, this.packingBonus);
-          this.message = this.drops % 5 === 0 ? this.pick('milestone') : this.pick('drop');
-          this.recalculateHeight();
+          settledThisFrame = true;
+          this.message = this.pieceTop(piece) < this.content.renderer.dangerY
+            ? this.pick('danger')
+            : this.pick('drop');
           changed = true;
           if (!this.preview) this.time.delayedCall(180, () => this.spawnPreview());
         }
       }
     }
 
-    const inDanger = this.limitViolated || this.pieces.some((piece) => piece.counted && this.pieceTop(piece) < this.content.renderer.dangerY);
+    if (this.recalculateScoreFromBoard()) {
+      if (settledThisFrame && this.drops > 0 && this.drops % 5 === 0) this.message = this.pick('milestone');
+      changed = true;
+    }
+    const inDanger = this.pieces.some((piece) => piece.counted && this.pieceTop(piece) < this.content.renderer.dangerY);
     if (inDanger) {
       if (!this.dangerSince) { this.dangerSince = time; this.message = this.pick('danger'); changed = true; }
       if (time - this.dangerSince >= this.content.stacking.dangerGraceMs) { this.finishRun('limit-crossed'); return; }
@@ -132,6 +125,8 @@ export class StackerScene extends Phaser.Scene {
   }
 
   restartRun(): void { this.resetRun(); }
+
+  startRun(): void { this.started = true; }
 
   private resetRun(): void {
     this.pieces.forEach((piece) => piece.destroy());
@@ -149,9 +144,9 @@ export class StackerScene extends Phaser.Scene {
     this.drops = 0;
     this.pieceCounts = {};
     this.dangerSince = 0;
-    this.limitViolated = false;
     this.gameOver = false;
     this.gameOverReason = null;
+    this.lastDropAt = 0;
     this.runSeed = this.createRunSeed();
     this.randomState = this.seedNumber(this.runSeed);
     this.message = this.pick('start');
@@ -215,7 +210,7 @@ export class StackerScene extends Phaser.Scene {
   }
 
   private movePreview(pointerX: number): void {
-    if (!this.preview) return;
+    if (!this.started || !this.preview) return;
     const definition = this.content.pieces[this.preview.pieceId!];
     const halfArena = this.content.renderer.arenaWidth / 2;
     const min = this.content.renderer.width / 2 - halfArena + definition.width / 2 + this.content.stacking.spawnPadding;
@@ -226,7 +221,7 @@ export class StackerScene extends Phaser.Scene {
   private nudgePreview(amount: number): void { if (this.preview) this.movePreview(this.preview.x + amount); }
 
   private dropPreview(): void {
-    if (!this.preview || this.gameOver || this.time.now - this.lastDropAt < 180) return;
+    if (!this.started || !this.preview || this.gameOver || this.time.now - this.lastDropAt < 180) return;
     const piece = this.preview;
     const definition = this.content.pieces[piece.pieceId!];
     this.preview = undefined;
@@ -294,7 +289,8 @@ export class StackerScene extends Phaser.Scene {
     return ((value ^ value >>> 14) >>> 0) / 4294967296;
   }
 
-  private finalizeScoreFromBoard(): void {
+  private recalculateScoreFromBoard(): boolean {
+    const previous = `${this.score}|${this.baseScore}|${this.packingBonus}|${this.packingRate}|${this.height}|${this.drops}`;
     const eligible = this.pieces.filter((piece) => piece.counted && this.pieceTop(piece) >= this.content.renderer.dangerY);
     this.drops = eligible.length;
     this.pieceCounts = {};
@@ -305,6 +301,11 @@ export class StackerScene extends Phaser.Scene {
     this.packingRate = this.drops ? Math.round(this.packingQualitySum / this.drops / 10) : 0;
     this.score = weightedTotalScore(this.baseScore, this.packingBonus);
     this.recalculateHeight();
+    return previous !== `${this.score}|${this.baseScore}|${this.packingBonus}|${this.packingRate}|${this.height}|${this.drops}`;
+  }
+
+  private finalizeScoreFromBoard(): void {
+    this.recalculateScoreFromBoard();
   }
 
   private emitState(): void {

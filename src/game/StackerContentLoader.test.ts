@@ -14,6 +14,10 @@ describe('stacker content protocol', () => {
     expect(validateStackerContent(null as never)).toEqual(['게임 설정의 최상위 값은 JSON 객체여야 합니다.']);
   });
 
+  it('reports missing required protocol sections instead of crashing', () => {
+    expect(validateStackerContent({ protocolVersion: 5 } as never)).toContain('renderer, physics, stacking, presenter, titleScreen, dialogue는 필수입니다.');
+  });
+
   it('rejects a missing piece texture', () => {
     const broken = structuredClone(content);
     broken.pieces['round-m'].texture = 'missing';
