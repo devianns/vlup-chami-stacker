@@ -11,6 +11,7 @@
     "width": 720,
     "height": 960,
     "background": "#edf8e7",
+    "backgroundImage": "meadow_background",
     "arenaWidth": 610,
     "floorY": 910,
     "dangerY": 255
@@ -31,10 +32,14 @@
   },
   "assets": {
     "images": {
-      "chami_round": { "src": "/assets/characters/chami/chami-round.png" },
-      "chami_wide": { "src": "/assets/characters/chami/chami-wide.png" },
-      "chami_tall": { "src": "/assets/characters/chami/chami-tall-prototype.png" },
-      "chami_wobble": { "src": "/assets/characters/chami/chami-wobble.png" }
+      "chami_round": { "src": "./assets/characters/chami/chami-round.png" },
+      "chami_wide": { "src": "./assets/characters/chami/chami-wide.png" },
+      "chami_tall": { "src": "./assets/characters/chami/chami-tall-prototype.png" },
+      "chami_wobble": { "src": "./assets/characters/chami/chami-wobble.png" },
+      "meadow_background": { "src": "./assets/backgrounds/chami-meadow-v1.png" },
+      "sitry_idle": { "src": "./assets/characters/sitry/sitry-idle.png" },
+      "sitry_cheer": { "src": "./assets/characters/sitry/sitry-cheer.png" },
+      "sitry_guide": { "src": "./assets/characters/sitry/sitry-guide.png" }
     }
   },
   "pieces": {
@@ -96,6 +101,12 @@
       "weight": 16,
       "centerOfMass": { "x": 0.1, "y": 0.03 }
     }
+  },
+  "presenter": {
+    "name": "SITRY",
+    "idle": "sitry_idle",
+    "guide": "sitry_guide",
+    "cheer": "sitry_cheer"
   },
   "dialogue": {
     "start": ["일단 올라가 볼게. 아마 괜찮아.", "차미는 높은 곳이 안 무서워. 아직은."],

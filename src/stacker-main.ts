@@ -28,6 +28,7 @@ document.body.innerHTML = `
         </div>
       </div>
       <aside class="next-panel" aria-label="다음 차미">
+        <img id="presenter" class="presenter" alt="시트리" />
         <span>다음 차미</span><div id="next-pieces"></div>
         <small>마우스로 위치를 잡고<br>클릭해서 떨어뜨리세요.<br><kbd>←</kbd> <kbd>→</kbd> <kbd>Space</kbd>도 가능!</small>
       </aside>
@@ -73,6 +74,10 @@ function render(state: StackerRunState, content: Awaited<ReturnType<typeof loadS
   element('#best-score').textContent = state.bestScore.toLocaleString();
   element('#lives').textContent = `${'● '.repeat(Math.max(0, state.lives))}${'○ '.repeat(Math.max(0, content.stacking.lives - state.lives))}`.trim();
   element('#message').textContent = state.message;
+  const presenterKey = state.gameOver || state.drops === 0 ? content.presenter.idle : state.drops % 5 === 0 ? content.presenter.cheer : content.presenter.guide;
+  const presenter = element<HTMLImageElement>('#presenter');
+  presenter.src = content.assets.images[presenterKey].src;
+  presenter.alt = `${content.presenter.name} 스탠딩 일러스트`;
   element('#next-pieces').innerHTML = state.nextPieces.map((id) => {
     const piece = content.pieces[id];
     const asset = content.assets.images[piece.texture];

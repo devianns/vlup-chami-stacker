@@ -47,6 +47,11 @@ export function validateStackerContent(data: StackerGameProtocol): string[] {
   if (!data.assets?.images || !data.pieces) return [...issues, 'assets.images와 pieces는 필수입니다.'];
   if (!Object.keys(data.pieces).length) issues.push('pieces: 최소 한 종류가 필요합니다.');
   Object.entries(data.pieces).forEach(([id, piece]) => validatePiece(id, piece, data, issues));
+  if (data.renderer.backgroundImage && !data.assets.images[data.renderer.backgroundImage]) issues.push(`renderer.backgroundImage: 존재하지 않는 이미지 '${data.renderer.backgroundImage}'`);
+  if (!data.presenter?.name) issues.push('presenter.name은 필수입니다.');
+  (['idle', 'guide', 'cheer'] as const).forEach((key) => {
+    if (!data.assets.images[data.presenter?.[key]]) issues.push(`presenter.${key}: 존재하지 않는 이미지 '${data.presenter?.[key]}'`);
+  });
   const totalWeight = Object.values(data.pieces).reduce((sum, piece) => sum + piece.weight, 0);
   if (!(totalWeight > 0)) issues.push('pieces: 등장 가중치 합은 0보다 커야 합니다.');
   if (!(data.renderer?.width > 0) || !(data.renderer?.height > 0)) issues.push('renderer: 유효한 화면 크기가 필요합니다.');

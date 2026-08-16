@@ -42,6 +42,9 @@ export class StackerScene extends Phaser.Scene {
     const right = left + arenaWidth;
 
     this.cameras.main.setBackgroundColor(this.content.renderer.background);
+    if (this.content.renderer.backgroundImage) {
+      this.add.image(width / 2, height / 2, this.content.renderer.backgroundImage).setDisplaySize(width, height).setDepth(-10).setAlpha(0.88);
+    }
     this.add.rectangle(width / 2, floorY + wall / 2, arenaWidth + wall * 2, wall, 0xf3d6b0).setDepth(-1);
     this.add.rectangle(left - wall / 2, height / 2, wall, height, 0xf3d6b0).setDepth(-1);
     this.add.rectangle(right + wall / 2, height / 2, wall, height, 0xf3d6b0).setDepth(-1);

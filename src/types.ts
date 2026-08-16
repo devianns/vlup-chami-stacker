@@ -22,11 +22,12 @@ export interface StackerPieceDefinition {
 export interface StackerGameProtocol {
   protocolVersion: 4;
   game: { id: string; title: string; subtitle: string; version: string };
-  renderer: { width: number; height: number; background: string; arenaWidth: number; floorY: number; dangerY: number };
+  renderer: { width: number; height: number; background: string; backgroundImage?: string; arenaWidth: number; floorY: number; dangerY: number };
   physics: { gravityY: number; wallThickness: number; settleVelocity: number; settleMs: number };
   stacking: { lives: number; previewY: number; spawnPadding: number; dangerGraceMs: number; nextPreviewCount: number; heightScoreScale: number };
   assets: { images: Record<string, ImageAsset> };
   pieces: Record<string, StackerPieceDefinition>;
+  presenter: { name: string; idle: string; guide: string; cheer: string };
   dialogue: { start: string[]; drop: string[]; combo: string[]; danger: string[]; gameOver: string[] };
 }
 

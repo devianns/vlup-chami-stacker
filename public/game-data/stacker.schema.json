@@ -4,7 +4,7 @@
   "title": "Chami Stacker Game Protocol v4",
   "type": "object",
   "additionalProperties": false,
-  "required": ["protocolVersion", "game", "renderer", "physics", "stacking", "assets", "pieces", "dialogue"],
+  "required": ["protocolVersion", "game", "renderer", "physics", "stacking", "assets", "pieces", "presenter", "dialogue"],
   "properties": {
     "$schema": { "type": "string" },
     "protocolVersion": { "const": 4 },
@@ -18,7 +18,7 @@
       "type": "object",
       "additionalProperties": false,
       "required": ["width", "height", "background", "arenaWidth", "floorY", "dangerY"],
-      "properties": { "width": { "type": "number", "exclusiveMinimum": 0 }, "height": { "type": "number", "exclusiveMinimum": 0 }, "background": { "type": "string" }, "arenaWidth": { "type": "number", "exclusiveMinimum": 0 }, "floorY": { "type": "number" }, "dangerY": { "type": "number" } }
+      "properties": { "width": { "type": "number", "exclusiveMinimum": 0 }, "height": { "type": "number", "exclusiveMinimum": 0 }, "background": { "type": "string" }, "backgroundImage": { "type": "string" }, "arenaWidth": { "type": "number", "exclusiveMinimum": 0 }, "floorY": { "type": "number" }, "dangerY": { "type": "number" } }
     },
     "physics": {
       "type": "object",
@@ -45,6 +45,12 @@
         "required": ["name", "texture", "shape", "width", "height", "mass", "friction", "frictionAir", "restitution", "angleJitter", "score", "weight"],
         "properties": { "name": { "type": "string" }, "texture": { "type": "string" }, "shape": { "enum": ["circle", "capsule", "rectangle"] }, "width": { "type": "number", "exclusiveMinimum": 0 }, "height": { "type": "number", "exclusiveMinimum": 0 }, "radius": { "type": "number", "exclusiveMinimum": 0 }, "mass": { "type": "number", "exclusiveMinimum": 0 }, "friction": { "type": "number", "minimum": 0, "maximum": 1 }, "frictionAir": { "type": "number", "minimum": 0 }, "restitution": { "type": "number", "minimum": 0, "maximum": 1 }, "angleJitter": { "type": "number", "minimum": 0 }, "score": { "type": "number", "minimum": 0 }, "weight": { "type": "number", "exclusiveMinimum": 0 }, "centerOfMass": { "type": "object", "required": ["x", "y"], "properties": { "x": { "type": "number" }, "y": { "type": "number" } } } }
       }
+    },
+    "presenter": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "idle", "guide", "cheer"],
+      "properties": { "name": { "type": "string" }, "idle": { "type": "string" }, "guide": { "type": "string" }, "cheer": { "type": "string" } }
     },
     "dialogue": {
       "type": "object",
