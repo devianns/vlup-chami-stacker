@@ -38,4 +38,25 @@ html,body{height:100%;overflow:hidden}.app-shell{height:100dvh;max-height:100dvh
 @media(max-height:700px){.title-block{display:none}.app-shell{grid-template-rows:minmax(0,1fr)}.next-panel .speech{display:flex!important}.next-panel{max-height:78px}.presenter-stage{height:72px}.next-panel .presenter{height:80px}}
 .floating-actions{z-index:2000!important;right:max(12px,env(safe-area-inset-right))!important;bottom:max(12px,env(safe-area-inset-bottom))!important}
 .title-screen:not(.leaving)~.floating-actions{display:none}
+
+/* Mobile finishing pass: keep the host panel usable and group the title actions. */
+@media(max-width:700px){
+  .title-copy{inset:50% 0 auto;transform:translateY(-50%);padding-inline:12px}
+  .title-copy h1{margin:12px 0 6px}
+  .title-copy p{margin:6px 0 0}
+  .title-copy #enter-game{margin-top:20px}
+  .title-copy .title-sound,.title-copy .title-ranking{margin-top:10px}
+  .title-copy small{margin-top:11px}
+  .next-panel{padding:4px 7px;grid-template-columns:minmax(0,1fr) 116px}
+  .floating-actions{right:max(10px,env(safe-area-inset-right))!important;bottom:calc(104px + env(safe-area-inset-bottom))!important;flex-direction:column;gap:7px}
+  .floating-actions .sound-toggle,.floating-actions .floating-ranking{width:48px;height:48px;min-width:48px}
+}
+@media(max-width:430px) and (max-height:700px){
+  .title-copy{inset:48% 0 auto}
+  .title-copy h1{font-size:clamp(2.1rem,12vw,3.25rem);margin:7px 0 3px}
+  .title-copy p{font-size:.84rem;margin-top:3px}
+  .title-copy #enter-game{margin-top:14px}
+  .title-copy .title-sound,.title-copy .title-ranking{margin-top:7px}
+  .title-copy small{margin-top:7px}
+}
 @media(max-width:900px){html,body{width:100%;max-width:100vw}.app-shell,.game-layout,.score-panel,.next-panel{width:100%;max-width:100vw;min-width:0}.game-layout>*{min-width:0}.stage-wrap{width:min(100%,calc((100dvh - 145px)*.75));height:auto;max-width:100%}.next-panel{grid-template-columns:minmax(0,1fr) 116px}.host-row,.next-queue,#next-pieces{min-width:0;overflow:hidden}.next-queue #next-pieces{gap:3px}.next-panel figure{flex:0 0 52px;width:52px}.next-panel img{max-width:100%}}

@@ -39,7 +39,7 @@ export class GameAudio {
     }
     this.ensureGraph();
     await this.context!.resume();
-    this.master!.gain.setTargetAtTime(0.72, this.context!.currentTime, 0.08);
+    this.master!.gain.setTargetAtTime(0.94, this.context!.currentTime, 0.08);
     this.nextBeat = this.context!.currentTime + 0.08;
     this.startScheduler();
     this.play('ui');
@@ -71,17 +71,23 @@ export class GameAudio {
     this.effects = this.context.createGain();
     this.reverb = this.context.createConvolver();
     this.master.gain.value = 0;
-    this.music.gain.value = 0.19;
-    this.effects.gain.value = 0.32;
+    this.music.gain.value = 0.34;
+    this.effects.gain.value = 0.56;
     this.reverb.buffer = this.createImpulse(1.4, 2.4);
     this.music.connect(this.master);
     this.music.connect(this.reverb);
     this.effects.connect(this.master);
     this.effects.connect(this.reverb);
     const wet = this.context.createGain();
-    wet.gain.value = 0.13;
+    wet.gain.value = 0.18;
     this.reverb.connect(wet).connect(this.master);
-    this.master.connect(this.context.destination);
+    const compressor = this.context.createDynamicsCompressor();
+    compressor.threshold.value = -12;
+    compressor.knee.value = 12;
+    compressor.ratio.value = 5;
+    compressor.attack.value = 0.008;
+    compressor.release.value = 0.18;
+    this.master.connect(compressor).connect(this.context.destination);
   }
 
   private createImpulse(seconds: number, decay: number): AudioBuffer {
