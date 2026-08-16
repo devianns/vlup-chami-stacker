@@ -4,6 +4,7 @@ import { ContentError, loadStackerContent } from './game/StackerContentLoader';
 import { StackerScene } from './game/StackerScene';
 import { StackerSaveManager } from './save/StackerSaveManager';
 import { OnlineLeaderboard } from './leaderboard/OnlineLeaderboard';
+import { GameAudio } from './audio/GameAudio';
 import type { LocalScoreEntry, StackerRunState } from './types';
 
 document.body.innerHTML = `
@@ -15,11 +16,13 @@ document.body.innerHTML = `
       <h1 id="title-logo"><span>차미 쌓기</span><strong>게임!</strong></h1>
       <p id="title-description">말랑한 차미를 아슬아슬 쌓아 보세요!</p>
       <button id="enter-game" type="button" disabled><span>준비 중…</span><i>▶</i></button>
+      <button id="title-sound" class="sound-toggle title-sound" type="button" aria-pressed="false"><i>🔇</i><span>소리 켜기</span></button>
       <button id="title-ranking" class="title-ranking" type="button" disabled>🏆 전체 순위표 보기</button>
       <small>CLICK / ENTER</small>
     </div>
   </section>
   <main class="app-shell">
+    <button id="game-sound" class="sound-toggle game-sound" type="button" aria-pressed="false"><i>🔇</i><span>소리 켜기</span></button>
     <header class="title-block">
       <span class="eyebrow">시트리와 함께하는 차미 쌓기</span>
       <h1 id="game-title">차미를 불러오는 중…</h1>
@@ -70,6 +73,22 @@ document.body.innerHTML = `
 
 const element = <T extends HTMLElement>(id: string): T => document.querySelector<T>(id)!;
 let currentState: StackerRunState | null = null;
+let previousAudioState: StackerRunState | null = null;
+const audio = new GameAudio();
+
+function updateSoundButtons(): void {
+  const enabled = audio.isEnabled();
+  document.querySelectorAll<HTMLButtonElement>('.sound-toggle').forEach((button) => {
+    button.setAttribute('aria-pressed', String(enabled));
+    button.querySelector('i')!.textContent = enabled ? '🔊' : '🔇';
+    button.querySelector('span')!.textContent = enabled ? '소리 끄기' : '소리 켜기';
+  });
+}
+
+document.querySelectorAll<HTMLButtonElement>('.sound-toggle').forEach((button) => {
+  button.onclick = async () => { await audio.setEnabled(!audio.isEnabled()); updateSoundButtons(); };
+});
+updateSoundButtons();
 
 async function boot(): Promise<void> {
   try {
@@ -79,6 +98,7 @@ async function boot(): Promise<void> {
     let onlineEntries = online.cached();
     const scene = new StackerScene(content, saves.load());
     scene.connect((state) => render(state, content), (save) => saves.save(save));
+    scene.events.on('chami-drop', () => audio.play('drop'));
     new Phaser.Game({
       type: Phaser.AUTO,
       parent: 'game',
@@ -106,6 +126,7 @@ async function boot(): Promise<void> {
       const screen = element('#title-screen');
       if (screen.classList.contains('leaving')) return;
       screen.classList.add('leaving');
+      audio.play('ui');
       window.setTimeout(() => screen.classList.add('hidden'), 520);
     };
     enter.onclick = openGame;
@@ -155,6 +176,7 @@ async function boot(): Promise<void> {
           applyOnlineRanking(await online.submit(entry));
           const onlineRank = onlineEntries.findIndex((candidate) => candidate.runSeed === currentState!.runSeed);
           status.textContent = onlineRank >= 0 ? `온라인 기록 저장 완료! 현재 ${onlineRank + 1}위예요.` : '온라인에 기록을 저장했어요! TOP 20에도 다시 도전해 보세요.';
+          audio.play('saved');
         } else {
           status.textContent = `이 브라우저에 저장했어요. 현재 ${rankings.findIndex((candidate) => candidate.runSeed === currentState!.runSeed) + 1}위예요.`;
           renderLeaderboard(rankings);
@@ -181,6 +203,12 @@ async function boot(): Promise<void> {
 }
 
 function render(state: StackerRunState, content: Awaited<ReturnType<typeof loadStackerContent>>): void {
+  if (previousAudioState) {
+    if (state.gameOver && !previousAudioState.gameOver) audio.play('gameOver');
+    else if (state.nearLimit && !previousAudioState.nearLimit) audio.play('danger');
+    else if (state.drops > previousAudioState.drops) audio.play(state.drops % 5 === 0 ? 'milestone' : 'land');
+  }
+  previousAudioState = { ...state, nextPieces: [...state.nextPieces] };
   currentState = state;
   element('#score').textContent = state.score.toLocaleString();
   element('#drops').textContent = state.drops.toLocaleString();

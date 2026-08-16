@@ -212,6 +212,7 @@ export class StackerScene extends Phaser.Scene {
     piece.setAlpha(1).setAngle(angleFactor * definition.angleJitter);
     piece.droppedAt = this.time.now;
     this.pieces.push(piece);
+    this.events.emit('chami-drop');
     this.emitState();
   }
 
