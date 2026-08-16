@@ -15,7 +15,7 @@ document.body.innerHTML = `
       <h1 id="title-logo"><span>차미 쌓기</span><strong>게임!</strong></h1>
       <p id="title-description">말랑한 차미를 아슬아슬 쌓아 보세요!</p>
       <button id="enter-game" type="button" disabled><span>준비 중…</span><i>▶</i></button>
-      <button id="title-ranking" class="title-ranking" type="button" disabled>🏆 내 기록 보기</button>
+      <button id="title-ranking" class="title-ranking" type="button" disabled>🏆 전체 순위표 보기</button>
       <small>CLICK / ENTER</small>
     </div>
   </section>
@@ -47,9 +47,9 @@ document.body.innerHTML = `
             </dl>
             <p>차미 <b id="result-drops">0</b>개 · 높이 <b id="result-height">0</b>cm</p>
             <label class="nickname-field"><span>기록에 남길 닉네임</span><input id="nickname" maxlength="12" autocomplete="nickname" placeholder="1~12자로 입력해 주세요" /></label>
-            <button id="register-score" class="primary-result" type="button">내 기록 저장하기</button>
+            <button id="register-score" class="primary-result" type="button">전체 순위표에 등록하기</button>
             <em id="register-status" aria-live="polite"></em>
-            <div class="result-actions"><button id="restart" type="button">다시 쌓기</button><button id="result-ranking" type="button">순위 보기</button></div>
+            <div class="result-actions"><button id="restart" type="button">다시 쌓기</button><button id="result-ranking" type="button">전체 순위표</button></div>
           </div>
         </div>
       </div>
@@ -60,12 +60,12 @@ document.body.innerHTML = `
       </aside>
     </section>
     <section class="speech" aria-live="polite"><i></i><strong>시트리</strong><p id="message">차미를 고르는 중이에요…</p></section>
-    <footer><span id="content-version">게임 데이터 확인 중</span><button id="footer-ranking" type="button">🏆 내 기록 보기</button><span>기록은 이 브라우저에만 저장됩니다.</span></footer>
+    <footer><span id="content-version">게임 데이터 확인 중</span><button id="footer-ranking" type="button">🏆 전체 순위표 보기</button><span>등록한 기록은 모든 이용자의 순위표에 반영됩니다.</span></footer>
   </main>
   <dialog id="leaderboard-dialog" class="leaderboard-dialog">
-    <form method="dialog" class="leaderboard-head"><div><span>전체 이용자 TOP 20</span><h2>차미 쌓기 최고 기록</h2></div><div class="ranking-head-actions"><i id="ranking-spinner" class="ui-spinner hidden" aria-label="점수판 불러오는 중"></i><button aria-label="닫기">×</button></div></form>
+    <form method="dialog" class="leaderboard-head"><div><span>전체 이용자 TOP 20</span><h2>차미 쌓기 전체 순위표</h2></div><div class="ranking-head-actions"><i id="ranking-spinner" class="ui-spinner hidden" aria-label="전체 순위표 불러오는 중"></i><button aria-label="전체 순위표 닫기">×</button></div></form>
     <div id="leaderboard-list" class="leaderboard-list"></div>
-    <p id="ranking-status">점수판을 준비하고 있어요.</p>
+    <p id="ranking-status">전체 순위표를 준비하고 있어요.</p>
   </dialog>`;
 
 const element = <T extends HTMLElement>(id: string): T => document.querySelector<T>(id)!;
@@ -114,11 +114,11 @@ async function boot(): Promise<void> {
     const applyOnlineRanking = (entries: LocalScoreEntry[], animate = false) => {
       onlineEntries = entries;
       renderLeaderboard(entries, animate);
-      element('#ranking-status').textContent = '방금 온라인 점수판과 동기화했어요.';
+      element('#ranking-status').textContent = '방금 전체 순위표를 새로 불러왔어요.';
     };
     const refreshRanking = async () => {
       if (!online.available) {
-        element('#ranking-status').textContent = '온라인 주소가 없어 이 브라우저의 기록만 보여 드려요.';
+        element('#ranking-status').textContent = '전체 순위표에 연결하지 못해 이 브라우저의 기록을 보여 드려요.';
         return;
       }
       setRankingBusy(true);
