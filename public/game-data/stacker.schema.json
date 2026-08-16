@@ -4,7 +4,7 @@
   "title": "Chami Stacker Game Protocol v4",
   "type": "object",
   "additionalProperties": false,
-  "required": ["protocolVersion", "game", "renderer", "physics", "stacking", "assets", "pieces", "presenter", "dialogue"],
+  "required": ["protocolVersion", "game", "renderer", "physics", "stacking", "assets", "pieces", "presenter", "titleScreen", "dialogue"],
   "properties": {
     "$schema": { "type": "string" },
     "protocolVersion": { "const": 4 },
@@ -51,6 +51,12 @@
       "additionalProperties": false,
       "required": ["name", "idle", "guide", "cheer"],
       "properties": { "name": { "type": "string" }, "idle": { "type": "string" }, "guide": { "type": "string" }, "cheer": { "type": "string" } }
+    },
+    "titleScreen": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["art", "eyebrow", "title", "accent", "subtitle", "cta"],
+      "properties": { "art": { "type": "string" }, "eyebrow": { "type": "string" }, "title": { "type": "string" }, "accent": { "type": "string" }, "subtitle": { "type": "string" }, "cta": { "type": "string" } }
     },
     "dialogue": {
       "type": "object",

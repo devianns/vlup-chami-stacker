@@ -28,6 +28,7 @@ export interface StackerGameProtocol {
   assets: { images: Record<string, ImageAsset> };
   pieces: Record<string, StackerPieceDefinition>;
   presenter: { name: string; idle: string; guide: string; cheer: string };
+  titleScreen: { art: string; eyebrow: string; title: string; accent: string; subtitle: string; cta: string };
   dialogue: { start: string[]; drop: string[]; combo: string[]; danger: string[]; gameOver: string[] };
 }
 

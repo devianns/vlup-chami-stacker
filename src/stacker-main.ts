@@ -6,6 +6,17 @@ import { StackerSaveManager } from './save/StackerSaveManager';
 import type { StackerRunState } from './types';
 
 document.body.innerHTML = `
+  <section id="title-screen" class="title-screen" aria-labelledby="title-logo">
+    <img id="title-art" class="title-art" alt="시트리와 차미가 함께하는 차미 쌓기 게임" />
+    <div class="title-shade"></div>
+    <div class="title-copy">
+      <span id="title-eyebrow" class="title-eyebrow">SITRY × CHAMI</span>
+      <h1 id="title-logo"><span>차미 쌓기</span><strong>게임!</strong></h1>
+      <p id="title-description">말랑한 차미를 아슬아슬 쌓아 보세요!</p>
+      <button id="enter-game" type="button" disabled><span>준비 중…</span><i>▶</i></button>
+      <small>CLICK / ENTER</small>
+    </div>
+  </section>
   <main class="app-shell">
     <header class="title-block">
       <span class="eyebrow">말랑말랑 물리 스태커</span>
@@ -59,6 +70,22 @@ async function boot(): Promise<void> {
     element('#game-title').textContent = content.game.title;
     element('#game-subtitle').textContent = content.game.subtitle;
     element('#content-version').textContent = `JSON protocol v${content.protocolVersion} · content ${content.game.version}`;
+    const title = content.titleScreen;
+    element<HTMLImageElement>('#title-art').src = content.assets.images[title.art].src;
+    element('#title-eyebrow').textContent = title.eyebrow;
+    element('#title-logo').innerHTML = `<span>${title.title}</span><strong>${title.accent}</strong>`;
+    element('#title-description').textContent = title.subtitle;
+    const enter = element<HTMLButtonElement>('#enter-game');
+    enter.disabled = false;
+    enter.querySelector('span')!.textContent = title.cta;
+    const openGame = () => {
+      const screen = element('#title-screen');
+      if (screen.classList.contains('leaving')) return;
+      screen.classList.add('leaving');
+      window.setTimeout(() => screen.classList.add('hidden'), 520);
+    };
+    enter.onclick = openGame;
+    window.addEventListener('keydown', (event) => { if (event.key === 'Enter' && !enter.disabled) openGame(); });
     element('#loading').classList.add('hidden');
     element<HTMLButtonElement>('#restart').onclick = () => scene.events.emit('restart-run');
   } catch (error) {

@@ -52,6 +52,8 @@ export function validateStackerContent(data: StackerGameProtocol): string[] {
   (['idle', 'guide', 'cheer'] as const).forEach((key) => {
     if (!data.assets.images[data.presenter?.[key]]) issues.push(`presenter.${key}: 존재하지 않는 이미지 '${data.presenter?.[key]}'`);
   });
+  if (!data.assets.images[data.titleScreen?.art]) issues.push(`titleScreen.art: 존재하지 않는 이미지 '${data.titleScreen?.art}'`);
+  if (!data.titleScreen?.title || !data.titleScreen?.cta) issues.push('titleScreen.title과 titleScreen.cta는 필수입니다.');
   const totalWeight = Object.values(data.pieces).reduce((sum, piece) => sum + piece.weight, 0);
   if (!(totalWeight > 0)) issues.push('pieces: 등장 가중치 합은 0보다 커야 합니다.');
   if (!(data.renderer?.width > 0) || !(data.renderer?.height > 0)) issues.push('renderer: 유효한 화면 크기가 필요합니다.');

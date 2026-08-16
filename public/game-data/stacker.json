@@ -39,7 +39,8 @@
       "meadow_background": { "src": "./assets/backgrounds/chami-meadow-v1.png" },
       "sitry_idle": { "src": "./assets/characters/sitry/sitry-idle.png" },
       "sitry_cheer": { "src": "./assets/characters/sitry/sitry-cheer.png" },
-      "sitry_guide": { "src": "./assets/characters/sitry/sitry-guide.png" }
+      "sitry_guide": { "src": "./assets/characters/sitry/sitry-guide.png" },
+      "title_sitry_chami": { "src": "./assets/title/sitry-chami-title-v1.png" }
     }
   },
   "pieces": {
@@ -107,6 +108,14 @@
     "idle": "sitry_idle",
     "guide": "sitry_guide",
     "cheer": "sitry_cheer"
+  },
+  "titleScreen": {
+    "art": "title_sitry_chami",
+    "eyebrow": "SITRY × CHAMI",
+    "title": "차미 쌓기",
+    "accent": "게임!",
+    "subtitle": "말랑한 차미를 아슬아슬, 어디까지 쌓을 수 있을까?",
+    "cta": "게임 시작"
   },
   "dialogue": {
     "start": ["일단 올라가 볼게. 아마 괜찮아.", "차미는 높은 곳이 안 무서워. 아직은."],
