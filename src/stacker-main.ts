@@ -22,7 +22,6 @@ document.body.innerHTML = `
     </div>
   </section>
   <main class="app-shell">
-    <button id="game-sound" class="sound-toggle game-sound" type="button" aria-pressed="false"><i>🔇</i><span>소리 켜기</span></button>
     <header class="title-block">
       <span class="eyebrow">시트리와 함께하는 차미 쌓기</span>
       <h1 id="game-title">차미를 불러오는 중…</h1>
@@ -57,14 +56,19 @@ document.body.innerHTML = `
         </div>
       </div>
       <aside class="next-panel" aria-label="다음 차미">
-        <div class="presenter-stage"><img id="presenter" class="presenter" alt="시트리" /><b>시트리</b></div>
+        <div class="host-row">
+          <div class="presenter-stage"><img id="presenter" class="presenter" alt="시트리" /><b>시트리</b></div>
+          <section class="speech" aria-live="polite"><i></i><strong>시트리</strong><p id="message">차미를 고르는 중이에요…</p></section>
+        </div>
         <div class="next-queue"><span>다음 차미</span><div id="next-pieces"></div></div>
         <small>빨간 선을 넘지 않도록 빈틈을 채우세요.<br>위치를 잡고 클릭하면 놓을 수 있어요.<br><kbd>←</kbd> <kbd>→</kbd> <kbd>Space</kbd>도 가능!</small>
       </aside>
     </section>
-    <section class="speech" aria-live="polite"><i></i><strong>시트리</strong><p id="message">차미를 고르는 중이에요…</p></section>
-    <footer><span id="content-version">게임 데이터 확인 중</span><button id="footer-ranking" type="button">🏆 전체 순위표 보기</button><span>등록한 기록은 모든 이용자의 순위표에 반영됩니다.</span></footer>
   </main>
+  <nav class="floating-actions" aria-label="빠른 메뉴">
+    <button id="game-sound" class="sound-toggle game-sound" type="button" aria-pressed="false" aria-label="소리 켜기"><i>🔇</i><span>소리 켜기</span></button>
+    <button id="floating-ranking" class="floating-ranking" type="button" aria-label="전체 순위표 보기"><i>🏆</i><span>전체 순위표</span></button>
+  </nav>
   <dialog id="leaderboard-dialog" class="leaderboard-dialog">
     <form method="dialog" class="leaderboard-head"><div><span>전체 이용자 TOP 20</span><h2>차미 쌓기 전체 순위표</h2></div><div class="ranking-head-actions"><i id="ranking-spinner" class="ui-spinner hidden" aria-label="전체 순위표 불러오는 중"></i><button aria-label="전체 순위표 닫기">×</button></div></form>
     <div id="leaderboard-list" class="leaderboard-list"></div>
@@ -80,6 +84,7 @@ function updateSoundButtons(): void {
   const enabled = audio.isEnabled();
   document.querySelectorAll<HTMLButtonElement>('.sound-toggle').forEach((button) => {
     button.setAttribute('aria-pressed', String(enabled));
+    button.setAttribute('aria-label', enabled ? '소리 끄기' : '소리 켜기');
     button.querySelector('i')!.textContent = enabled ? '🔊' : '🔇';
     button.querySelector('span')!.textContent = enabled ? '소리 끄기' : '소리 켜기';
   });
@@ -112,7 +117,6 @@ async function boot(): Promise<void> {
     });
     element('#game-title').textContent = content.game.title;
     element('#game-subtitle').textContent = content.game.subtitle;
-    element('#content-version').textContent = `게임 데이터 ${content.game.version}`;
     if (content.renderer.backgroundImage) document.documentElement.style.setProperty('--page-bg', `url("${content.assets.images[content.renderer.backgroundImage].src}")`);
     const title = content.titleScreen;
     element<HTMLImageElement>('#title-art').src = content.assets.images[title.art].src;
@@ -158,7 +162,7 @@ async function boot(): Promise<void> {
     const titleRanking = element<HTMLButtonElement>('#title-ranking');
     titleRanking.disabled = false;
     titleRanking.onclick = showRanking;
-    element<HTMLButtonElement>('#footer-ranking').onclick = showRanking;
+    element<HTMLButtonElement>('#floating-ranking').onclick = showRanking;
     element<HTMLButtonElement>('#result-ranking').onclick = showRanking;
     element<HTMLInputElement>('#nickname').value = saves.load().nickname;
     element<HTMLButtonElement>('#register-score').onclick = async () => {
@@ -188,6 +192,7 @@ async function boot(): Promise<void> {
       }
     };
     window.addEventListener('keydown', (event) => { if (event.key === 'Enter' && !enter.disabled) openGame(); });
+    if (import.meta.env.DEV && new URLSearchParams(location.search).has('play')) openGame();
     element('#loading').classList.add('hidden');
     element<HTMLButtonElement>('#restart').onclick = () => {
       element<HTMLButtonElement>('#register-score').disabled = false;
