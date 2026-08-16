@@ -1,3 +1,88 @@
+# 차미 쌓기 게임!
+
+시트리와 함께 빨간 한계선 아래의 빈틈을 차미로 채우는 모바일 퍼스트 물리 스태킹 팬게임입니다. Phaser 3, TypeScript, Vite와 JSON 게임 프로토콜로 구성되어 있습니다.
+
+## 게임 규칙
+
+- 다음 차미의 위치를 정한 뒤 클릭하거나 Space를 눌러 떨어뜨립니다.
+- 빨간 선 아래에 완전히 들어간 차미만 최종 개수에 포함됩니다.
+- 안정된 차미가 빨간 선을 넘은 상태로 1.1초가 지나면 게임이 끝납니다.
+- 차미는 매 게임 셔플 백 방식으로 무작위 등장합니다.
+- 총점은 `차미 개수 × 10,000 + 빈틈 보너스(0~9,999)`입니다.
+- 차미 개수가 같을 때는 더 낮고 촘촘하게 배치한 기록이 앞섭니다.
+
+자세한 기준은 [게임 규칙 문서](docs/GAME_RULES.ko.md)에 정리되어 있습니다.
+
+## 실행
+
+```bash
+npm install
+npm run dev
+```
+
+프로덕션 확인:
+
+```bash
+npm test
+npm run build
+npm run preview
+```
+
+같은 와이파이의 휴대폰에서 테스트하려면 `npm run dev -- --host`를 실행하고 표시되는 Network 주소로 접속합니다.
+
+## 데이터 기반 구성
+
+- 게임 데이터: [`public/game-data/stacker.json`](public/game-data/stacker.json)
+- JSON Schema: [`public/game-data/stacker.schema.json`](public/game-data/stacker.schema.json)
+- 물리 게임: [`src/game/StackerScene.ts`](src/game/StackerScene.ts)
+- 점수 공식: [`src/game/StackerScoring.ts`](src/game/StackerScoring.ts)
+- 온라인 점수판 API: [`api/leaderboard.ts`](api/leaderboard.ts)
+
+현재 게임 프로토콜은 v5, 콘텐츠 버전은 2.0.0입니다.
+
+## 온라인 점수판
+
+Vercel 서버리스 함수가 Neon PostgreSQL에 접속합니다. 데이터베이스 비밀번호는 클라이언트 번들에 포함하지 않습니다.
+
+Vercel 프로젝트에는 다음 중 하나가 설정되어 있어야 합니다.
+
+```text
+DATABASE_URL=postgresql://...
+# 또는
+POSTGRES_URL=postgresql://...
+```
+
+Vercel에 게임 전체를 배포하면 같은 출처의 `/api/leaderboard`를 자동 사용합니다. GitHub Pages에서 Vercel API를 호출하려면 GitHub 저장소의 Actions variable에 다음 값을 설정합니다.
+
+```text
+VITE_API_BASE_URL=https://<vercel-project>.vercel.app
+```
+
+게임은 접속 직후 유휴 시간에 점수판을 미리 받고, 순위창을 열 때 최신 기록을 다시 확인합니다. 서버 응답이 늦거나 실패하면 브라우저 로컬 기록을 유지합니다.
+
+로컬에서 API까지 함께 시험하려면 Vercel CLI의 `vercel dev`를 사용합니다. 일반 `npm run dev`는 프런트엔드만 실행합니다.
+
+## 배포
+
+- Vercel: 정적 게임과 `api/leaderboard.ts`를 함께 배포합니다.
+- GitHub Pages: `.github/workflows/deploy.yml`이 정적 `dist`를 배포합니다. 온라인 점수판에는 위 `VITE_API_BASE_URL` 설정이 필요합니다.
+
+## 저장과 검증
+
+- 닉네임은 최대 12자로 정규화합니다.
+- 최종 점수는 저장 전에 같은 공식으로 다시 계산합니다.
+- 온라인 기록에는 콘텐츠 버전과 `runSeed`를 함께 저장합니다.
+- 로컬 점수판은 네트워크 장애 시 보조 기록으로 유지됩니다.
+
+## 주요 에셋
+
+- 차미 스프라이트: `public/assets/characters/chami/`
+- 시트리 스탠딩: `public/assets/characters/sitry/`
+- 타이틀 키아트: `public/assets/title/`
+- 파비콘: `public/chami-favicon.png`
+
+<!-- 아래는 교체 전 RPG 문서의 보존본이며 렌더링하지 않습니다.
+
 # Data-driven SSG RPG Engine · 별빛 골짜기
 
 GitHub Pages에서 실행되는 데이터 기반 싱글 플레이 2D RPG 엔진입니다. Phaser 3, TypeScript, Vite로 구성되며 별도 서버가 필요 없습니다. 게임 시나리오는 엔진과 분리된 JSON으로 로드됩니다.
@@ -106,3 +191,4 @@ JSON만으로 사각형 충돌은 충분히 구성할 수 있지만 복잡한 �
 ## GitHub Pages 배포
 
 저장소 설정의 **Pages → Build and deployment → Source**를 **GitHub Actions**로 지정한 뒤 `main` 브랜치에 푸시하면 자동 배포됩니다. Vite의 상대 경로 설정 덕분에 프로젝트 페이지와 사용자 페이지 모두에서 동작합니다.
+-->

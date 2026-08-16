@@ -3,6 +3,7 @@ import './stacker.css';
 import { ContentError, loadStackerContent } from './game/StackerContentLoader';
 import { StackerScene } from './game/StackerScene';
 import { StackerSaveManager } from './save/StackerSaveManager';
+import { OnlineLeaderboard } from './leaderboard/OnlineLeaderboard';
 import type { LocalScoreEntry, StackerRunState } from './types';
 
 document.body.innerHTML = `
@@ -62,9 +63,9 @@ document.body.innerHTML = `
     <footer><span id="content-version">게임 데이터 확인 중</span><button id="footer-ranking" type="button">🏆 내 기록 보기</button><span>기록은 이 브라우저에만 저장됩니다.</span></footer>
   </main>
   <dialog id="leaderboard-dialog" class="leaderboard-dialog">
-    <form method="dialog" class="leaderboard-head"><div><span>내 기기에 저장된 TOP 20</span><h2>차미 쌓기 최고 기록</h2></div><button aria-label="닫기">×</button></form>
+    <form method="dialog" class="leaderboard-head"><div><span>전체 이용자 TOP 20</span><h2>차미 쌓기 최고 기록</h2></div><div class="ranking-head-actions"><i id="ranking-spinner" class="ui-spinner hidden" aria-label="점수판 불러오는 중"></i><button aria-label="닫기">×</button></div></form>
     <div id="leaderboard-list" class="leaderboard-list"></div>
-    <p>기록은 현재 사용 중인 브라우저에만 저장됩니다.</p>
+    <p id="ranking-status">점수판을 준비하고 있어요.</p>
   </dialog>`;
 
 const element = <T extends HTMLElement>(id: string): T => document.querySelector<T>(id)!;
@@ -74,6 +75,8 @@ async function boot(): Promise<void> {
   try {
     const content = await loadStackerContent();
     const saves = new StackerSaveManager(content);
+    const online = new OnlineLeaderboard();
+    let onlineEntries = online.cached();
     const scene = new StackerScene(content, saves.load());
     scene.connect((state) => render(state, content), (save) => saves.save(save));
     new Phaser.Game({
@@ -107,25 +110,59 @@ async function boot(): Promise<void> {
     };
     enter.onclick = openGame;
     const rankingDialog = element<HTMLDialogElement>('#leaderboard-dialog');
-    const showRanking = () => { renderLeaderboard(saves.leaderboard()); if (!rankingDialog.open) rankingDialog.showModal(); };
+    const setRankingBusy = (busy: boolean) => element('#ranking-spinner').classList.toggle('hidden', !busy);
+    const applyOnlineRanking = (entries: LocalScoreEntry[], animate = false) => {
+      onlineEntries = entries;
+      renderLeaderboard(entries, animate);
+      element('#ranking-status').textContent = '방금 온라인 점수판과 동기화했어요.';
+    };
+    const refreshRanking = async () => {
+      if (!online.available) {
+        element('#ranking-status').textContent = '온라인 주소가 없어 이 브라우저의 기록만 보여 드려요.';
+        return;
+      }
+      setRankingBusy(true);
+      try { applyOnlineRanking(await online.refresh(), rankingDialog.open); }
+      catch (error) { element('#ranking-status').textContent = error instanceof Error ? error.message : '점수판을 불러오지 못했어요.'; }
+      finally { setRankingBusy(false); }
+    };
+    const showRanking = () => {
+      const initial = onlineEntries.length ? onlineEntries : saves.leaderboard();
+      renderLeaderboard(initial);
+      element('#ranking-status').textContent = onlineEntries.length ? '미리 받아 둔 기록이에요. 최신 기록을 확인하고 있어요…' : '최신 기록을 불러오고 있어요…';
+      if (!rankingDialog.open) rankingDialog.showModal();
+      void refreshRanking();
+    };
+    online.warmup((entries) => { onlineEntries = entries; if (rankingDialog.open) applyOnlineRanking(entries, true); });
     const titleRanking = element<HTMLButtonElement>('#title-ranking');
     titleRanking.disabled = false;
     titleRanking.onclick = showRanking;
     element<HTMLButtonElement>('#footer-ranking').onclick = showRanking;
     element<HTMLButtonElement>('#result-ranking').onclick = showRanking;
     element<HTMLInputElement>('#nickname').value = saves.load().nickname;
-    element<HTMLButtonElement>('#register-score').onclick = () => {
+    element<HTMLButtonElement>('#register-score').onclick = async () => {
       const button = element<HTMLButtonElement>('#register-score');
       const status = element('#register-status');
       try {
         if (!currentState) return;
         const rankings = saves.submitScore(element<HTMLInputElement>('#nickname').value, currentState);
+        const entry = rankings.find((candidate) => candidate.runSeed === currentState!.runSeed)!;
         button.disabled = true;
+        button.classList.add('is-loading');
         button.dataset.seed = currentState.runSeed;
-        status.textContent = `기록을 저장했어요! 현재 ${rankings.findIndex((entry) => entry.runSeed === currentState!.runSeed) + 1}위예요.`;
-        renderLeaderboard(rankings);
+        status.textContent = '기록을 저장하고 있어요…';
+        if (online.available) {
+          applyOnlineRanking(await online.submit(entry));
+          const onlineRank = onlineEntries.findIndex((candidate) => candidate.runSeed === currentState!.runSeed);
+          status.textContent = onlineRank >= 0 ? `온라인 기록 저장 완료! 현재 ${onlineRank + 1}위예요.` : '온라인에 기록을 저장했어요! TOP 20에도 다시 도전해 보세요.';
+        } else {
+          status.textContent = `이 브라우저에 저장했어요. 현재 ${rankings.findIndex((candidate) => candidate.runSeed === currentState!.runSeed) + 1}위예요.`;
+          renderLeaderboard(rankings);
+        }
       } catch (error) {
-        status.textContent = error instanceof Error ? error.message : '점수를 등록하지 못했습니다.';
+        status.textContent = `${error instanceof Error ? error.message : '온라인에 기록을 저장하지 못했어요.'} 이 브라우저에는 기록을 보관했어요.`;
+      } finally {
+        button.classList.remove('is-loading');
       }
     };
     window.addEventListener('keydown', (event) => { if (event.key === 'Enter' && !enter.disabled) openGame(); });
@@ -180,12 +217,18 @@ function render(state: StackerRunState, content: Awaited<ReturnType<typeof loadS
   element('#game-over').classList.toggle('hidden', !state.gameOver);
 }
 
-function renderLeaderboard(entries: LocalScoreEntry[]): void {
-  element('#leaderboard-list').innerHTML = entries.length ? entries.map((entry, index) => `
+function renderLeaderboard(entries: LocalScoreEntry[], animate = false): void {
+  const list = element('#leaderboard-list');
+  list.innerHTML = entries.length ? entries.map((entry, index) => `
     <article class="rank-row ${index < 3 ? `rank-${index + 1}` : ''}">
       <b>${index + 1}</b><strong>${escapeHtml(entry.nickname)}</strong><span>${entry.score.toLocaleString()}점</span>
       <small>차미 ${entry.drops}개 · 밀집도 ${entry.packingRate}% · ${new Date(entry.playedAt).toLocaleDateString('ko-KR')}</small>
     </article>`).join('') : '<div class="empty-ranking">아직 저장된 기록이 없어요.<br>차미탑을 쌓고 첫 기록을 남겨 보세요!</div>';
+  if (animate) {
+    list.classList.remove('ranking-updated');
+    void list.offsetWidth;
+    list.classList.add('ranking-updated');
+  }
 }
 
 function escapeHtml(value: string): string {

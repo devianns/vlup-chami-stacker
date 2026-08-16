@@ -11,9 +11,12 @@
     "validate:content": "vitest run src/game/StackerContentLoader.test.ts"
   },
   "dependencies": {
+    "@neondatabase/serverless": "^1.1.0",
     "phaser": "^3.90.0"
   },
   "devDependencies": {
+    "@types/node": "^26.2.0",
+    "@vercel/node": "^5.10.1",
     "typescript": "^5.9.2",
     "vite": "^7.1.2",
     "vitest": "^3.2.4"
