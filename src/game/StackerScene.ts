@@ -4,6 +4,7 @@ import { packingBonusFor, placementQuality, totalScore } from './StackerScoring'
 
 type StateHandler = (state: StackerRunState) => void;
 type SaveHandler = (save: StackerSaveData) => void;
+type DropHandler = () => void;
 
 interface ChamiPiece extends Phaser.Physics.Matter.Image {
   pieceId?: string;
@@ -17,6 +18,7 @@ export class StackerScene extends Phaser.Scene {
   private queue: string[] = [];
   private stateHandler?: StateHandler;
   private saveHandler?: SaveHandler;
+  private dropHandler?: DropHandler;
   private score = 0;
   private baseScore = 0;
   private packingBonus = 0;
@@ -120,9 +122,10 @@ export class StackerScene extends Phaser.Scene {
     if (changed) this.emitState();
   }
 
-  connect(stateHandler: StateHandler, saveHandler: SaveHandler): void {
+  connect(stateHandler: StateHandler, saveHandler: SaveHandler, dropHandler?: DropHandler): void {
     this.stateHandler = stateHandler;
     this.saveHandler = saveHandler;
+    this.dropHandler = dropHandler;
     this.emitState();
   }
 
@@ -212,7 +215,7 @@ export class StackerScene extends Phaser.Scene {
     piece.setAlpha(1).setAngle(angleFactor * definition.angleJitter);
     piece.droppedAt = this.time.now;
     this.pieces.push(piece);
-    this.events.emit('chami-drop');
+    this.dropHandler?.();
     this.emitState();
   }
 

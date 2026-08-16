@@ -102,8 +102,7 @@ async function boot(): Promise<void> {
     const online = new OnlineLeaderboard();
     let onlineEntries = online.cached();
     const scene = new StackerScene(content, saves.load());
-    scene.connect((state) => render(state, content), (save) => saves.save(save));
-    scene.events.on('chami-drop', () => audio.play('drop'));
+    scene.connect((state) => render(state, content), (save) => saves.save(save), () => audio.play('drop'));
     new Phaser.Game({
       type: Phaser.AUTO,
       parent: 'game',
@@ -131,7 +130,9 @@ async function boot(): Promise<void> {
       if (screen.classList.contains('leaving')) return;
       screen.classList.add('leaving');
       audio.play('ui');
-      window.setTimeout(() => screen.classList.add('hidden'), 520);
+      window.setTimeout(() => {
+        screen.classList.add('hidden');
+      }, 520);
     };
     enter.onclick = openGame;
     const rankingDialog = element<HTMLDialogElement>('#leaderboard-dialog');
