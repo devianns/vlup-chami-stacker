@@ -26,7 +26,7 @@ document.body.innerHTML = `
   </section>
   <main class="app-shell">
     <header class="title-block">
-      <span class="eyebrow">시트리와 함께하는 차미 쌓기</span>
+      
       <h1 id="game-title">차미를 불러오는 중…</h1>
       <p id="game-subtitle">잠시만 기다려 주세요.</p>
     </header>
