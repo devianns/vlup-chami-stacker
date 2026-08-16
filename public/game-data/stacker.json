@@ -5,7 +5,7 @@
     "id": "chami-stacker",
     "title": "차미야, 튀어나오면 안 돼!",
     "subtitle": "빨간 선을 넘지 않게 차미를 최대한 많이, 빈틈없이 넣어 보세요.",
-    "version": "2.0.0"
+    "version": "2.1.0"
   },
   "renderer": {
     "width": 720,
@@ -14,7 +14,7 @@
     "backgroundImage": "meadow_background",
     "arenaWidth": 610,
     "floorY": 910,
-    "dangerY": 255
+    "dangerY": 210
   },
   "physics": {
     "gravityY": 1.05,

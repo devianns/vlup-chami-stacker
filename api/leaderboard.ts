@@ -1,7 +1,7 @@
 import { neon } from '@neondatabase/serverless';
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 
-const CONTENT_VERSION = '2.0.0';
+const CONTENT_VERSION = '2.1.0';
 const POINTS_PER_CHAMI = 10_000;
 const MAX_PACKING_BONUS = 9_999;
 const MAX_ENTRIES = 20;
