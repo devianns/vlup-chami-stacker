@@ -18,8 +18,10 @@ document.body.innerHTML = `
       <button id="enter-game" type="button" disabled><span>준비 중…</span><i>▶</i></button>
       <button id="title-sound" class="sound-toggle title-sound" type="button" aria-pressed="false"><i>🔇</i><span>소리 켜기</span></button>
       <button id="title-ranking" class="title-ranking" type="button" disabled>🏆 전체 순위표 보기</button>
+      <button id="title-notice" class="title-notice" type="button" disabled>ⓘ 팬게임 이용 안내</button>
       <small>CLICK / ENTER</small>
     </div>
+    <p class="title-legal">비영리 팬게임 · Original By Creatorbus Inc. · <a href="https://www.youtube.com/@sitry_vlup" target="_blank" rel="noopener noreferrer">시트리 공식 유튜브</a><br>캐릭터·배경·타이틀 등 시각 에셋 제작에 생성형 AI를 사용했습니다.</p>
   </section>
   <main class="app-shell">
     <header class="title-block">
@@ -36,6 +38,7 @@ document.body.innerHTML = `
       </aside>
       <div class="stage-wrap">
         <div id="game" aria-label="차미 스태커 게임 화면"></div>
+        <span class="stage-credit" aria-hidden="true">Original By Creatorbus Inc.</span>
         <div id="loading" class="loading">게임 데이터를 검사하고 있어요…</div>
         <div id="game-over" class="game-over hidden" role="dialog" aria-modal="true" aria-labelledby="result-title">
           <div class="result-card">
@@ -68,11 +71,27 @@ document.body.innerHTML = `
   <nav class="floating-actions" aria-label="빠른 메뉴">
     <button id="game-sound" class="sound-toggle game-sound" type="button" aria-pressed="false" aria-label="소리 켜기"><i>🔇</i><span>소리 켜기</span></button>
     <button id="floating-ranking" class="floating-ranking" type="button" aria-label="전체 순위표 보기"><i>🏆</i><span>전체 순위표</span></button>
+    <button id="floating-notice" class="floating-notice" type="button" aria-label="팬게임 이용 안내"><i>ⓘ</i><span>이용 안내</span></button>
   </nav>
   <dialog id="leaderboard-dialog" class="leaderboard-dialog">
     <form method="dialog" class="leaderboard-head"><div><span>전체 이용자 TOP 20</span><h2>차미 쌓기 전체 순위표</h2></div><div class="ranking-head-actions"><i id="ranking-spinner" class="ui-spinner hidden" aria-label="전체 순위표 불러오는 중"></i><button aria-label="전체 순위표 닫기">×</button></div></form>
     <div id="leaderboard-list" class="leaderboard-list"></div>
     <p id="ranking-status">전체 순위표를 준비하고 있어요.</p>
+  </dialog>
+  <dialog id="notice-dialog" class="notice-dialog" aria-labelledby="notice-title">
+    <div class="notice-heading"><span>FAN GAME NOTICE</span><h2 id="notice-title">팬게임 이용 안내</h2></div>
+    <section class="notice-card">
+      <strong>Original By Creatorbus Inc.</strong>
+      <p>본 게임은 V-LUP 시트리를 바탕으로 개인이 제작한 비공식·비영리 팬게임이며, ㈜크리에이터버스 및 시트리의 공식 서비스가 아닙니다.</p>
+      <p>캐릭터 스탠딩·스프라이트·배경·타이틀 등 일부 시각 에셋은 생성형 AI를 활용해 제작했습니다. 공식 음원 및 스트리머 음성 합성은 사용하지 않으며, 게임 음악과 효과음은 독자적인 실시간 합성 음향입니다.</p>
+      <p>원저작자의 권리와 V-LUP 팬게임·2차창작 가이드라인을 존중하며, 권리자의 요청이 있을 경우 수정하거나 배포를 중단합니다.</p>
+      <nav class="notice-links" aria-label="공식 링크">
+        <a href="https://www.youtube.com/@sitry_vlup" target="_blank" rel="noopener noreferrer">시트리 공식 YouTube ↗</a>
+        <a href="https://cafe.naver.com/vlup" target="_blank" rel="noopener noreferrer">V-LUP 공식 카페 ↗</a>
+        <a id="notice-game-link" href="/" target="_blank" rel="noopener noreferrer">게임 배포처 ↗</a>
+      </nav>
+    </section>
+    <form method="dialog"><button class="notice-close" aria-label="팬게임 이용 안내 닫기">확인</button></form>
   </dialog>`;
 
 const element = <T extends HTMLElement>(id: string): T => document.querySelector<T>(id)!;
@@ -136,6 +155,19 @@ async function boot(): Promise<void> {
     };
     enter.onclick = openGame;
     const rankingDialog = element<HTMLDialogElement>('#leaderboard-dialog');
+    const noticeDialog = element<HTMLDialogElement>('#notice-dialog');
+    element<HTMLAnchorElement>('#notice-game-link').href = location.href;
+    const showNotice = () => {
+      if (noticeDialog.open) return;
+      scene.scene.pause();
+      noticeDialog.showModal();
+    };
+    noticeDialog.addEventListener('close', () => {
+      if (scene.scene.isPaused()) scene.scene.resume();
+    });
+    element<HTMLButtonElement>('#title-notice').onclick = showNotice;
+    element<HTMLButtonElement>('#title-notice').disabled = false;
+    element<HTMLButtonElement>('#floating-notice').onclick = showNotice;
     const setRankingBusy = (busy: boolean) => element('#ranking-spinner').classList.toggle('hidden', !busy);
     const applyOnlineRanking = (entries: LocalScoreEntry[], animate = false) => {
       onlineEntries = entries;

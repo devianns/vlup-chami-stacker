@@ -1,6 +1,11 @@
 # 차미 쌓기 게임!
 
+[게임 규칙](docs/GAME_RULES.ko.md) · [팬게임 규정 준수 확인](FAN_GAME_COMPLIANCE.ko.md)
+
 시트리와 함께 빨간 한계선 아래의 빈틈을 차미로 채우는 모바일 퍼스트 물리 스태킹 팬게임입니다. Phaser 3, TypeScript, Vite와 JSON 게임 프로토콜로 구성되어 있습니다.
+
+> 비영리 팬게임입니다. Original By Creatorbus Inc. · [시트리 공식 유튜브](https://www.youtube.com/@sitry_vlup)<br>
+> 게임의 캐릭터 스탠딩·스프라이트·배경·타이틀 등 시각 에셋 제작에 생성형 AI가 사용되었습니다. 공식 음원 및 AI 음성 합성은 사용하지 않습니다. 공개·배포 전 확인할 사항은 [팬게임 규정 준수 확인 문서](FAN_GAME_COMPLIANCE.ko.md)를 참고해 주세요.
 
 ## 게임 규칙
 
