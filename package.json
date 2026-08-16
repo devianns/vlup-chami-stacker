@@ -1,5 +1,5 @@
 {
-  "name": "ssg-adventure-rpg",
+  "name": "chami-stacker",
   "private": true,
   "version": "0.1.0",
   "type": "module",
@@ -7,8 +7,8 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
-    "test": "vitest run"
-    ,"validate:content": "vitest run src/game/ContentLoader.test.ts"
+    "test": "vitest run src/game/StackerContentLoader.test.ts",
+    "validate:content": "vitest run src/game/StackerContentLoader.test.ts"
   },
   "dependencies": {
     "phaser": "^3.90.0"

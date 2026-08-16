@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://sitry.local/schemas/chami-stacker-v4.json",
+  "title": "Chami Stacker Game Protocol v4",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["protocolVersion", "game", "renderer", "physics", "stacking", "assets", "pieces", "dialogue"],
+  "properties": {
+    "$schema": { "type": "string" },
+    "protocolVersion": { "const": 4 },
+    "game": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "title", "subtitle", "version"],
+      "properties": { "id": { "type": "string", "minLength": 1 }, "title": { "type": "string", "minLength": 1 }, "subtitle": { "type": "string" }, "version": { "type": "string", "minLength": 1 } }
+    },
+    "renderer": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["width", "height", "background", "arenaWidth", "floorY", "dangerY"],
+      "properties": { "width": { "type": "number", "exclusiveMinimum": 0 }, "height": { "type": "number", "exclusiveMinimum": 0 }, "background": { "type": "string" }, "arenaWidth": { "type": "number", "exclusiveMinimum": 0 }, "floorY": { "type": "number" }, "dangerY": { "type": "number" } }
+    },
+    "physics": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["gravityY", "wallThickness", "settleVelocity", "settleMs"],
+      "properties": { "gravityY": { "type": "number" }, "wallThickness": { "type": "number", "exclusiveMinimum": 0 }, "settleVelocity": { "type": "number", "minimum": 0 }, "settleMs": { "type": "number", "minimum": 0 } }
+    },
+    "stacking": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["lives", "previewY", "spawnPadding", "dangerGraceMs", "nextPreviewCount", "heightScoreScale"],
+      "properties": { "lives": { "type": "integer", "minimum": 1 }, "previewY": { "type": "number" }, "spawnPadding": { "type": "number", "minimum": 0 }, "dangerGraceMs": { "type": "number", "minimum": 0 }, "nextPreviewCount": { "type": "integer", "minimum": 1 }, "heightScoreScale": { "type": "number", "minimum": 0 } }
+    },
+    "assets": {
+      "type": "object",
+      "required": ["images"],
+      "properties": { "images": { "type": "object", "additionalProperties": { "type": "object", "required": ["src"], "properties": { "src": { "type": "string", "minLength": 1 } } } } }
+    },
+    "pieces": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": {
+        "type": "object",
+        "required": ["name", "texture", "shape", "width", "height", "mass", "friction", "frictionAir", "restitution", "angleJitter", "score", "weight"],
+        "properties": { "name": { "type": "string" }, "texture": { "type": "string" }, "shape": { "enum": ["circle", "capsule", "rectangle"] }, "width": { "type": "number", "exclusiveMinimum": 0 }, "height": { "type": "number", "exclusiveMinimum": 0 }, "radius": { "type": "number", "exclusiveMinimum": 0 }, "mass": { "type": "number", "exclusiveMinimum": 0 }, "friction": { "type": "number", "minimum": 0, "maximum": 1 }, "frictionAir": { "type": "number", "minimum": 0 }, "restitution": { "type": "number", "minimum": 0, "maximum": 1 }, "angleJitter": { "type": "number", "minimum": 0 }, "score": { "type": "number", "minimum": 0 }, "weight": { "type": "number", "exclusiveMinimum": 0 }, "centerOfMass": { "type": "object", "required": ["x", "y"], "properties": { "x": { "type": "number" }, "y": { "type": "number" } } } }
+      }
+    },
+    "dialogue": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["start", "drop", "combo", "danger", "gameOver"],
+      "properties": { "start": { "$ref": "#/$defs/lines" }, "drop": { "$ref": "#/$defs/lines" }, "combo": { "$ref": "#/$defs/lines" }, "danger": { "$ref": "#/$defs/lines" }, "gameOver": { "$ref": "#/$defs/lines" } }
+    }
+  },
+  "$defs": { "lines": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 } } }
+}

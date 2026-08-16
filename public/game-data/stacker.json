@@ -1,0 +1,107 @@
+{
+  "$schema": "./stacker.schema.json",
+  "protocolVersion": 4,
+  "game": {
+    "id": "chami-stacker",
+    "title": "차미야, 거기 서도 돼?",
+    "subtitle": "동글동글 차미를 최대한 엉뚱하게 쌓아 보세요.",
+    "version": "1.0.0"
+  },
+  "renderer": {
+    "width": 720,
+    "height": 960,
+    "background": "#edf8e7",
+    "arenaWidth": 610,
+    "floorY": 910,
+    "dangerY": 255
+  },
+  "physics": {
+    "gravityY": 1.05,
+    "wallThickness": 36,
+    "settleVelocity": 0.24,
+    "settleMs": 650
+  },
+  "stacking": {
+    "lives": 3,
+    "previewY": 105,
+    "spawnPadding": 10,
+    "dangerGraceMs": 1100,
+    "nextPreviewCount": 2,
+    "heightScoreScale": 0.22
+  },
+  "assets": {
+    "images": {
+      "chami_round": { "src": "/assets/characters/chami/chami-round.png" },
+      "chami_wide": { "src": "/assets/characters/chami/chami-wide.png" },
+      "chami_tall": { "src": "/assets/characters/chami/chami-tall-prototype.png" },
+      "chami_wobble": { "src": "/assets/characters/chami/chami-wobble.png" }
+    }
+  },
+  "pieces": {
+    "round": {
+      "name": "기본 차미",
+      "texture": "chami_round",
+      "shape": "circle",
+      "width": 138,
+      "height": 142,
+      "radius": 61,
+      "mass": 1.05,
+      "friction": 0.72,
+      "frictionAir": 0.012,
+      "restitution": 0.08,
+      "angleJitter": 4,
+      "score": 100,
+      "weight": 42
+    },
+    "wide": {
+      "name": "납작 차미",
+      "texture": "chami_wide",
+      "shape": "capsule",
+      "width": 184,
+      "height": 126,
+      "mass": 1.2,
+      "friction": 0.82,
+      "frictionAir": 0.014,
+      "restitution": 0.05,
+      "angleJitter": 3,
+      "score": 120,
+      "weight": 28
+    },
+    "tall": {
+      "name": "어라 차미",
+      "texture": "chami_tall",
+      "shape": "capsule",
+      "width": 92,
+      "height": 170,
+      "mass": 0.9,
+      "friction": 0.58,
+      "frictionAir": 0.009,
+      "restitution": 0.1,
+      "angleJitter": 7,
+      "score": 170,
+      "weight": 14
+    },
+    "wobble": {
+      "name": "삐딱 차미",
+      "texture": "chami_wobble",
+      "shape": "rectangle",
+      "width": 142,
+      "height": 150,
+      "mass": 1,
+      "friction": 0.5,
+      "frictionAir": 0.008,
+      "restitution": 0.12,
+      "angleJitter": 12,
+      "score": 160,
+      "weight": 16,
+      "centerOfMass": { "x": 0.1, "y": 0.03 }
+    }
+  },
+  "dialogue": {
+    "start": ["일단 올라가 볼게. 아마 괜찮아.", "차미는 높은 곳이 안 무서워. 아직은."],
+    "drop": ["착지인 것 같아.", "계획대로 눕긴 했어.", "흔들리지만 안 흔들리는 척할게."],
+    "combo": ["이게 탑이네. 차미가 방금 정했어.", "다섯 차미! 아무도 이유는 몰라."],
+    "danger": ["어라? 바닥이 옆으로 갔어.", "괜찮아. 떨어진 차미만 안 괜찮아."],
+    "gameOver": ["탑이 먼저 누웠어. 차미는 잘못 없어.", "완벽한 계획이었는데 중력이 참가했어."]
+  }
+}
