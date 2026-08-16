@@ -14,26 +14,24 @@ export interface StackerPieceDefinition {
   frictionAir: number;
   restitution: number;
   angleJitter: number;
-  score: number;
-  weight: number;
   centerOfMass?: { x: number; y: number };
 }
 
 export interface StackerGameProtocol {
-  protocolVersion: 4;
+  protocolVersion: 5;
   game: { id: string; title: string; subtitle: string; version: string };
   renderer: { width: number; height: number; background: string; backgroundImage?: string; arenaWidth: number; floorY: number; dangerY: number };
   physics: { gravityY: number; wallThickness: number; settleVelocity: number; settleMs: number };
-  stacking: { lives: number; previewY: number; spawnPadding: number; dangerGraceMs: number; nextPreviewCount: number; heightScoreScale: number };
+  stacking: { previewY: number; spawnPadding: number; dangerGraceMs: number; nextPreviewCount: number; pointsPerChami: number; maxPackingBonus: number; sequence: string[] };
   assets: { images: Record<string, ImageAsset> };
   pieces: Record<string, StackerPieceDefinition>;
   presenter: { name: string; idle: string; guide: string; cheer: string };
   titleScreen: { art: string; eyebrow: string; title: string; accent: string; subtitle: string; cta: string };
-  dialogue: { start: string[]; drop: string[]; combo: string[]; danger: string[]; gameOver: string[] };
+  dialogue: { start: string[]; drop: string[]; milestone: string[]; danger: string[]; gameOver: string[] };
 }
 
 export interface StackerSaveData {
-  version: 2;
+  version: 3;
   contentId: string;
   contentVersion: string;
   bestScore: number;
@@ -45,15 +43,15 @@ export interface StackerSaveData {
   leaderboard: LocalScoreEntry[];
 }
 
-export type GameOverReason = 'tower-overflow' | 'missed-pieces';
+export type GameOverReason = 'limit-crossed';
 
 export interface LocalScoreEntry {
   id: string;
   nickname: string;
   score: number;
-  pieceScore: number;
-  heightBonus: number;
-  comboBonus: number;
+  baseScore: number;
+  packingBonus: number;
+  packingRate: number;
   height: number;
   drops: number;
   playedAt: string;
@@ -64,16 +62,16 @@ export interface LocalScoreEntry {
 
 export interface StackerRunState {
   score: number;
-  pieceScore: number;
-  heightBonus: number;
-  comboBonus: number;
+  baseScore: number;
+  packingBonus: number;
+  packingRate: number;
   height: number;
-  lives: number;
   drops: number;
   bestScore: number;
   nextPieces: string[];
   message: string;
   gameOver: boolean;
+  nearLimit: boolean;
   gameOverReason: GameOverReason | null;
   runSeed: string;
 }

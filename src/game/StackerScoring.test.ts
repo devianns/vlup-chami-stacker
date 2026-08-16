@@ -1,21 +1,18 @@
 import { describe, expect, it } from 'vitest';
-import { comboBonusForDrop, heightBonusFor, isValidFinalScore, totalScore } from './StackerScoring';
+import { isValidFinalScore, packingBonusFor, placementQuality, totalScore } from './StackerScoring';
 
 describe('fair stacker scoring', () => {
-  it('awards combo points only every fifth settled Chami', () => {
-    expect(comboBonusForDrop(4)).toBe(0);
-    expect(comboBonusForDrop(5)).toBe(50);
-    expect(comboBonusForDrop(10)).toBe(100);
+  it('gives a better placement value to a Chami settled lower in the box', () => {
+    expect(placementQuality(800, 200, 900)).toBeGreaterThan(placementQuality(400, 200, 900));
   });
 
-  it('calculates a stable integer total', () => {
-    const height = heightBonusFor(321, 0.22);
-    expect(height).toBe(71);
-    expect(totalScore(500, height, 50)).toBe(621);
+  it('always ranks one more Chami above the maximum packing bonus', () => {
+    expect(totalScore(6, 10000, 0)).toBeGreaterThan(totalScore(5, 10000, 9999));
+    expect(packingBonusFor(4000, 5, 9999)).toBe(7999);
   });
 
   it('rejects a forged total', () => {
-    const state = { gameOver: true, score: 999, pieceScore: 100, heightBonus: 20, comboBonus: 0, height: 91, drops: 1, runSeed: 'run-test' };
-    expect(isValidFinalScore(state as never)).toBe(false);
+    const state = { gameOver: true, score: 999, baseScore: 10000, packingBonus: 2000, packingRate: 20, height: 91, drops: 1, runSeed: 'run-test' };
+    expect(isValidFinalScore(state as never, 10000, 9999)).toBe(false);
   });
 });

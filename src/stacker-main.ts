@@ -27,9 +27,9 @@ document.body.innerHTML = `
     <section class="game-layout">
       <aside class="score-panel" aria-label="현재 기록">
         <div><span>점수</span><strong id="score">0</strong></div>
-        <div><span>높이</span><strong><b id="height">0</b> cm</strong></div>
+        <div><span>쌓은 차미</span><strong><b id="drops">0</b>개</strong></div>
         <div><span>최고점</span><strong id="best-score">0</strong></div>
-        <div><span>남은 기회</span><strong id="lives">● ● ●</strong></div>
+        <div><span>밀집도</span><strong><b id="packing-rate">0</b>%</strong></div>
       </aside>
       <div class="stage-wrap">
         <div id="game" aria-label="차미 스태커 게임 화면"></div>
@@ -40,9 +40,9 @@ document.body.innerHTML = `
             <h2 id="result-title">이번 차미탑은 여기까지!</h2>
             <strong id="result-score">0</strong><small>FINAL SCORE</small>
             <dl class="score-breakdown">
-              <div><dt>쌓기 점수</dt><dd id="result-piece-score">0</dd></div>
-              <div><dt>높이 보너스</dt><dd id="result-height-bonus">0</dd></div>
-              <div><dt>콤보 보너스</dt><dd id="result-combo-bonus">0</dd></div>
+              <div><dt>차미 개수 점수</dt><dd id="result-base-score">0</dd></div>
+              <div><dt>빈틈 보너스</dt><dd id="result-packing-bonus">0</dd></div>
+              <div><dt>평균 밀집도</dt><dd id="result-packing-rate">0%</dd></div>
             </dl>
             <p>차미 <b id="result-drops">0</b>개 · 높이 <b id="result-height">0</b>cm</p>
             <label class="nickname-field"><span>기록에 남길 닉네임</span><input id="nickname" maxlength="12" autocomplete="nickname" placeholder="1~12자로 입력해 주세요" /></label>
@@ -55,7 +55,7 @@ document.body.innerHTML = `
       <aside class="next-panel" aria-label="다음 차미">
         <div class="presenter-stage"><img id="presenter" class="presenter" alt="시트리" /><b>시트리</b></div>
         <div class="next-queue"><span>다음 차미</span><div id="next-pieces"></div></div>
-        <small>마우스로 위치를 잡고<br>클릭해서 떨어뜨리세요.<br><kbd>←</kbd> <kbd>→</kbd> <kbd>Space</kbd>도 가능!</small>
+        <small>빨간 선을 넘지 않도록 빈틈을 채우세요.<br>위치를 잡고 클릭하면 놓을 수 있어요.<br><kbd>←</kbd> <kbd>→</kbd> <kbd>Space</kbd>도 가능!</small>
       </aside>
     </section>
     <section class="speech" aria-live="polite"><i></i><strong>시트리</strong><p id="message">차미를 고르는 중이에요…</p></section>
@@ -146,11 +146,11 @@ async function boot(): Promise<void> {
 function render(state: StackerRunState, content: Awaited<ReturnType<typeof loadStackerContent>>): void {
   currentState = state;
   element('#score').textContent = state.score.toLocaleString();
-  element('#height').textContent = state.height.toLocaleString();
+  element('#drops').textContent = state.drops.toLocaleString();
   element('#best-score').textContent = state.bestScore.toLocaleString();
-  element('#lives').textContent = `${'● '.repeat(Math.max(0, state.lives))}${'○ '.repeat(Math.max(0, content.stacking.lives - state.lives))}`.trim();
+  element('#packing-rate').textContent = state.packingRate.toLocaleString();
   element('#message').textContent = state.message;
-  const presenterMood = state.gameOver ? 'idle' : state.lives < content.stacking.lives ? 'worried' : state.drops > 0 && state.drops % 5 === 0 ? 'cheer' : state.drops === 0 ? 'idle' : 'guide';
+  const presenterMood = state.gameOver ? 'idle' : state.nearLimit ? 'worried' : state.drops > 0 && state.drops % 5 === 0 ? 'cheer' : state.drops === 0 ? 'idle' : 'guide';
   const presenterKey = presenterMood === 'cheer' ? content.presenter.cheer : presenterMood === 'idle' ? content.presenter.idle : content.presenter.guide;
   const presenter = element<HTMLImageElement>('#presenter');
   presenter.src = content.assets.images[presenterKey].src;
@@ -167,11 +167,11 @@ function render(state: StackerRunState, content: Awaited<ReturnType<typeof loadS
     return `<figure><img src="${asset.src}" alt="${piece.name}"><figcaption>${piece.name}</figcaption></figure>`;
   }).join('');
   if (state.gameOver) {
-    element('#result-reason').textContent = state.gameOverReason === 'missed-pieces' ? '차미가 세 번이나 떨어졌어요!' : '차미탑이 선을 넘어 버렸어요!';
+    element('#result-reason').textContent = '차미가 빨간 선을 넘어 버렸어요!';
     element('#result-score').textContent = state.score.toLocaleString();
-    element('#result-piece-score').textContent = state.pieceScore.toLocaleString();
-    element('#result-height-bonus').textContent = `+${state.heightBonus.toLocaleString()}`;
-    element('#result-combo-bonus').textContent = `+${state.comboBonus.toLocaleString()}`;
+    element('#result-base-score').textContent = state.baseScore.toLocaleString();
+    element('#result-packing-bonus').textContent = `+${state.packingBonus.toLocaleString()}`;
+    element('#result-packing-rate').textContent = `${state.packingRate.toLocaleString()}%`;
     element('#result-drops').textContent = state.drops.toLocaleString();
     element('#result-height').textContent = state.height.toLocaleString();
     const register = element<HTMLButtonElement>('#register-score');
@@ -184,7 +184,7 @@ function renderLeaderboard(entries: LocalScoreEntry[]): void {
   element('#leaderboard-list').innerHTML = entries.length ? entries.map((entry, index) => `
     <article class="rank-row ${index < 3 ? `rank-${index + 1}` : ''}">
       <b>${index + 1}</b><strong>${escapeHtml(entry.nickname)}</strong><span>${entry.score.toLocaleString()}점</span>
-      <small>높이 ${entry.height}cm · 차미 ${entry.drops}개 · ${new Date(entry.playedAt).toLocaleDateString('ko-KR')}</small>
+      <small>차미 ${entry.drops}개 · 밀집도 ${entry.packingRate}% · ${new Date(entry.playedAt).toLocaleDateString('ko-KR')}</small>
     </article>`).join('') : '<div class="empty-ranking">아직 저장된 기록이 없어요.<br>차미탑을 쌓고 첫 기록을 남겨 보세요!</div>';
 }
 

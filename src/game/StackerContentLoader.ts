@@ -35,14 +35,13 @@ function validatePiece(id: string, piece: StackerPieceDefinition, data: StackerG
   if (!(piece.width > 0) || !(piece.height > 0)) issues.push(`${path}: width와 height는 0보다 커야 합니다.`);
   if (piece.shape === 'circle' && (!(piece.radius ?? 0) || piece.radius! > Math.min(piece.width, piece.height) / 2)) issues.push(`${path}.radius: 원형 반지름이 유효하지 않습니다.`);
   if (!(piece.mass > 0)) issues.push(`${path}.mass: 0보다 커야 합니다.`);
-  if (piece.weight <= 0) issues.push(`${path}.weight: 0보다 커야 합니다.`);
   if (piece.friction < 0 || piece.friction > 1) issues.push(`${path}.friction: 0~1 범위여야 합니다.`);
   if (piece.restitution < 0 || piece.restitution > 1) issues.push(`${path}.restitution: 0~1 범위여야 합니다.`);
 }
 
 export function validateStackerContent(data: StackerGameProtocol): string[] {
   const issues: string[] = [];
-  if (data.protocolVersion !== 4) issues.push('protocolVersion: 지원 버전은 4입니다.');
+  if (data.protocolVersion !== 5) issues.push('protocolVersion: 지원 버전은 5입니다.');
   if (!data.game?.id || !data.game?.version || !data.game?.title) issues.push('game.id, game.version, game.title은 필수입니다.');
   if (!data.assets?.images || !data.pieces) return [...issues, 'assets.images와 pieces는 필수입니다.'];
   if (!Object.keys(data.pieces).length) issues.push('pieces: 최소 한 종류가 필요합니다.');
@@ -54,13 +53,13 @@ export function validateStackerContent(data: StackerGameProtocol): string[] {
   });
   if (!data.assets.images[data.titleScreen?.art]) issues.push(`titleScreen.art: 존재하지 않는 이미지 '${data.titleScreen?.art}'`);
   if (!data.titleScreen?.title || !data.titleScreen?.cta) issues.push('titleScreen.title과 titleScreen.cta는 필수입니다.');
-  const totalWeight = Object.values(data.pieces).reduce((sum, piece) => sum + piece.weight, 0);
-  if (!(totalWeight > 0)) issues.push('pieces: 등장 가중치 합은 0보다 커야 합니다.');
   if (!(data.renderer?.width > 0) || !(data.renderer?.height > 0)) issues.push('renderer: 유효한 화면 크기가 필요합니다.');
   if (!(data.renderer?.dangerY > data.stacking?.previewY && data.renderer.dangerY < data.renderer.floorY)) issues.push('renderer.dangerY: previewY와 floorY 사이여야 합니다.');
   if (!(data.renderer?.arenaWidth > 0 && data.renderer.arenaWidth <= data.renderer.width)) issues.push('renderer.arenaWidth: 화면 너비 이하여야 합니다.');
-  if (!(data.stacking?.lives > 0)) issues.push('stacking.lives: 1 이상이어야 합니다.');
-  (['start', 'drop', 'combo', 'danger', 'gameOver'] as const).forEach((key) => {
+  if (!(data.stacking?.pointsPerChami > data.stacking?.maxPackingBonus)) issues.push('stacking.pointsPerChami: maxPackingBonus보다 커야 합니다.');
+  if (!data.stacking?.sequence?.length) issues.push('stacking.sequence: 차미 순서가 하나 이상 필요합니다.');
+  data.stacking?.sequence?.forEach((id) => { if (!data.pieces[id]) issues.push(`stacking.sequence: 존재하지 않는 차미 '${id}'`); });
+  (['start', 'drop', 'milestone', 'danger', 'gameOver'] as const).forEach((key) => {
     if (!data.dialogue?.[key]?.length) issues.push(`dialogue.${key}: 대사가 하나 이상 필요합니다.`);
   });
   return issues;
