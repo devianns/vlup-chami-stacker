@@ -46,7 +46,6 @@ document.body.innerHTML = `
       </aside>
       <div class="stage-wrap">
         <div id="game" aria-label="차미 스태커 게임 화면"></div>
-        <div class="stage-credit" aria-hidden="true">비영리 팬게임 · Original By Creatorbus Inc. · 시트리 공식 유튜브<br><span>캐릭터·배경·타이틀 등 시각 에셋 제작에 생성형 AI를 사용했습니다.</span></div>
         <div id="loading" class="loading">게임 데이터를 검사하고 있어요…</div>
         <div id="game-over" class="game-over hidden" role="dialog" aria-modal="true" aria-labelledby="result-title">
           <div class="result-card">
@@ -76,6 +75,10 @@ document.body.innerHTML = `
       </aside>
     </section>
   </main>
+  <div class="game-legal-watermark" aria-hidden="true">
+    <strong>비영리 팬게임 · Original By Creatorbus Inc.</strong>
+    <span>캐릭터·배경·타이틀 등 시각 에셋 제작에 생성형 AI를 사용했습니다.</span>
+  </div>
   <nav class="floating-actions" aria-label="빠른 메뉴">
     <button id="game-sound" class="sound-toggle game-sound" type="button" aria-pressed="false" aria-label="소리 켜기"><i>🔇</i><span>소리 켜기</span></button>
     <button id="floating-ranking" class="floating-ranking" type="button" aria-label="전체 순위표 보기"><i>🏆</i><span>전체 순위표</span></button>
