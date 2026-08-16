@@ -16,8 +16,8 @@ describe('stacker content protocol', () => {
 
   it('rejects a missing piece texture', () => {
     const broken = structuredClone(content);
-    broken.pieces.round.texture = 'missing';
-    expect(validateStackerContent(broken)).toContain("pieces.round.texture: 존재하지 않는 이미지 'missing'");
+    broken.pieces['round-m'].texture = 'missing';
+    expect(validateStackerContent(broken)).toContain("pieces.round-m.texture: 존재하지 않는 이미지 'missing'");
   });
 
   it('rejects an invalid danger line', () => {
@@ -32,9 +32,9 @@ describe('stacker content protocol', () => {
     expect(validateStackerContent(broken)).toContain("stacking.bag: 존재하지 않는 차미 'unknown-chami'");
   });
 
-  it('keeps one Chami worth more than the maximum packing bonus', () => {
+  it('keeps every Chami size worth more than the maximum packing bonus', () => {
     const broken = structuredClone(content);
-    broken.stacking.maxPackingBonus = broken.stacking.pointsPerChami;
-    expect(validateStackerContent(broken).some((issue) => issue.startsWith('stacking.pointsPerChami'))).toBe(true);
+    broken.stacking.maxPackingBonus = broken.pieces['round-s'].points;
+    expect(validateStackerContent(broken).some((issue) => issue.startsWith('pieces.points'))).toBe(true);
   });
 });

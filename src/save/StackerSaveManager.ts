@@ -48,7 +48,8 @@ export class StackerSaveManager {
     const existingSave = this.load();
     if (existingSave.leaderboard.some((entry) => entry.runSeed === state.runSeed)) return existingSave.leaderboard;
     if (!nickname) throw new Error('닉네임을 한 글자 이상 입력해 주세요.');
-    if (!isValidFinalScore(state, this.content.stacking.pointsPerChami, this.content.stacking.maxPackingBonus)) throw new Error('점수 정보를 확인할 수 없어요. 다시 플레이해 주세요.');
+    const piecePoints = Object.fromEntries(Object.entries(this.content.pieces).map(([id, piece]) => [id, piece.points]));
+    if (!isValidFinalScore(state, piecePoints, this.content.stacking.maxPackingBonus)) throw new Error('점수 정보를 확인할 수 없어요. 다시 플레이해 주세요.');
     const playedAt = new Date().toISOString();
     const payload = [nickname, state.score, state.baseScore, state.packingBonus, state.packingRate, state.height, state.drops, state.runSeed, this.content.game.version, playedAt].join('|');
     const entry: LocalScoreEntry = {
@@ -60,6 +61,7 @@ export class StackerSaveManager {
       packingRate: state.packingRate,
       height: state.height,
       drops: state.drops,
+      pieceCounts: { ...state.pieceCounts },
       playedAt,
       runSeed: state.runSeed,
       contentVersion: this.content.game.version,
@@ -70,7 +72,7 @@ export class StackerSaveManager {
     save.bestScore = Math.max(save.bestScore, entry.score);
     save.bestHeight = Math.max(save.bestHeight, entry.height);
     save.leaderboard = [...save.leaderboard, entry]
-      .sort((a, b) => b.drops - a.drops || b.packingRate - a.packingRate || b.score - a.score || a.playedAt.localeCompare(b.playedAt))
+      .sort((a, b) => b.score - a.score || b.packingRate - a.packingRate || b.drops - a.drops || a.playedAt.localeCompare(b.playedAt))
       .slice(0, 20);
     this.save(save);
     return save.leaderboard;

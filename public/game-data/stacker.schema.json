@@ -29,8 +29,8 @@
     "stacking": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["previewY", "spawnPadding", "dangerGraceMs", "nextPreviewCount", "pointsPerChami", "maxPackingBonus", "bag"],
-      "properties": { "previewY": { "type": "number" }, "spawnPadding": { "type": "number", "minimum": 0 }, "dangerGraceMs": { "type": "number", "minimum": 0 }, "nextPreviewCount": { "type": "integer", "minimum": 1 }, "pointsPerChami": { "type": "integer", "minimum": 2 }, "maxPackingBonus": { "type": "integer", "minimum": 0 }, "bag": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 } } }
+      "required": ["previewY", "spawnPadding", "dangerGraceMs", "nextPreviewCount", "maxPackingBonus", "bag"],
+      "properties": { "previewY": { "type": "number" }, "spawnPadding": { "type": "number", "minimum": 0 }, "dangerGraceMs": { "type": "number", "minimum": 0 }, "nextPreviewCount": { "type": "integer", "minimum": 1 }, "maxPackingBonus": { "type": "integer", "minimum": 0 }, "randomHorizontalVelocity": { "type": "number", "minimum": 0 }, "randomAngularVelocity": { "type": "number", "minimum": 0 }, "bag": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 } } }
     },
     "assets": {
       "type": "object",
@@ -42,8 +42,8 @@
       "minProperties": 1,
       "additionalProperties": {
         "type": "object",
-        "required": ["name", "texture", "shape", "width", "height", "mass", "friction", "frictionAir", "restitution", "angleJitter"],
-        "properties": { "name": { "type": "string" }, "texture": { "type": "string" }, "shape": { "enum": ["circle", "capsule", "rectangle", "trapezoid"] }, "width": { "type": "number", "exclusiveMinimum": 0 }, "height": { "type": "number", "exclusiveMinimum": 0 }, "radius": { "type": "number", "exclusiveMinimum": 0 }, "mass": { "type": "number", "exclusiveMinimum": 0 }, "friction": { "type": "number", "minimum": 0, "maximum": 1 }, "frictionAir": { "type": "number", "minimum": 0 }, "restitution": { "type": "number", "minimum": 0, "maximum": 1 }, "angleJitter": { "type": "number", "minimum": 0 }, "collisionWidthScale": { "type": "number", "exclusiveMinimum": 0, "maximum": 1 }, "collisionHeightScale": { "type": "number", "exclusiveMinimum": 0, "maximum": 1 }, "trapezoidSlope": { "type": "number", "minimum": 0, "maximum": 1 }, "renderOrigin": { "type": "object", "required": ["x", "y"], "properties": { "x": { "type": "number", "minimum": 0, "maximum": 1 }, "y": { "type": "number", "minimum": 0, "maximum": 1 } } }, "centerOfMass": { "type": "object", "required": ["x", "y"], "properties": { "x": { "type": "number" }, "y": { "type": "number" } } } }
+        "required": ["name", "points", "texture", "shape", "width", "height", "mass", "friction", "frictionAir", "restitution", "angleJitter"],
+        "properties": { "name": { "type": "string" }, "points": { "type": "integer", "exclusiveMinimum": 0 }, "texture": { "type": "string" }, "shape": { "enum": ["circle", "capsule", "rectangle", "trapezoid"] }, "width": { "type": "number", "exclusiveMinimum": 0 }, "height": { "type": "number", "exclusiveMinimum": 0 }, "radius": { "type": "number", "exclusiveMinimum": 0 }, "mass": { "type": "number", "exclusiveMinimum": 0 }, "friction": { "type": "number", "minimum": 0, "maximum": 1 }, "frictionAir": { "type": "number", "minimum": 0 }, "restitution": { "type": "number", "minimum": 0, "maximum": 1 }, "angleJitter": { "type": "number", "minimum": 0 }, "collisionWidthScale": { "type": "number", "exclusiveMinimum": 0, "maximum": 1 }, "collisionHeightScale": { "type": "number", "exclusiveMinimum": 0, "maximum": 1 }, "trapezoidSlope": { "type": "number", "minimum": 0, "maximum": 1 }, "renderOrigin": { "type": "object", "required": ["x", "y"], "properties": { "x": { "type": "number", "minimum": 0, "maximum": 1 }, "y": { "type": "number", "minimum": 0, "maximum": 1 } } }, "centerOfMass": { "type": "object", "required": ["x", "y"], "properties": { "x": { "type": "number" }, "y": { "type": "number" } } } }
       }
     },
     "presenter": {

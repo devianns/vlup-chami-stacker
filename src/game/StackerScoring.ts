@@ -10,18 +10,24 @@ export const packingBonusFor = (qualitySum: number, drops: number, maxBonus: num
   return Math.max(0, Math.min(maxBonus, Math.round((qualitySum / drops / 1000) * maxBonus)));
 };
 
-export const totalScore = (drops: number, pointsPerChami: number, packingBonus: number): number => drops * pointsPerChami + packingBonus;
+export const weightedTotalScore = (baseScore: number, packingBonus: number): number => baseScore + packingBonus;
 
-export function isValidFinalScore(state: StackerRunState, pointsPerChami: number, maxPackingBonus: number): boolean {
+export function isValidFinalScore(state: StackerRunState, piecePoints: Record<string, number>, maxPackingBonus: number): boolean {
+  const counts = Object.entries(state.pieceCounts ?? {});
+  const countedDrops = counts.reduce((sum, [, count]) => sum + count, 0);
+  const expectedBaseScore = counts.reduce((sum, [id, count]) => sum + (piecePoints[id] ?? NaN) * count, 0);
   return state.gameOver
     && Number.isSafeInteger(state.score)
     && state.score >= 0
-    && state.baseScore === state.drops * pointsPerChami
+    && counts.every(([id, count]) => Number.isSafeInteger(count) && count >= 0 && Number.isSafeInteger(piecePoints[id]))
+    && countedDrops === state.drops
+    && state.baseScore === expectedBaseScore
     && state.packingBonus >= 0
     && state.packingBonus <= maxPackingBonus
-    && state.score === totalScore(state.drops, pointsPerChami, state.packingBonus)
+    && state.score === weightedTotalScore(state.baseScore, state.packingBonus)
     && state.packingRate >= 0
     && state.packingRate <= 100
+    && Math.abs(Math.round((state.packingBonus / Math.max(1, maxPackingBonus)) * 100) - state.packingRate) <= 1
     && state.height >= 0
     && state.drops >= 0
     && !!state.runSeed;

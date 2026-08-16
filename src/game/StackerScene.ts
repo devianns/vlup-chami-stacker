@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import type { GameOverReason, StackerGameProtocol, StackerPieceDefinition, StackerRunState, StackerSaveData } from '../types';
-import { packingBonusFor, placementQuality, totalScore } from './StackerScoring';
+import { packingBonusFor, placementQuality, weightedTotalScore } from './StackerScoring';
 
 type StateHandler = (state: StackerRunState) => void;
 type SaveHandler = (save: StackerSaveData) => void;
@@ -26,6 +26,7 @@ export class StackerScene extends Phaser.Scene {
   private packingQualitySum = 0;
   private height = 0;
   private drops = 0;
+  private pieceCounts: Record<string, number> = {};
   private dangerSince = 0;
   private limitViolated = false;
   private gameOver = false;
@@ -93,7 +94,7 @@ export class StackerScene extends Phaser.Scene {
         const body = piece.body as MatterJS.BodyType;
         if (body.speed <= this.content.physics.settleVelocity && body.angularSpeed <= 0.035) {
           piece.counted = true;
-          const pieceTop = piece.y - piece.displayHeight * 0.42;
+          const pieceTop = this.pieceTop(piece);
           if (pieceTop < this.content.renderer.dangerY) {
             this.limitViolated = true;
             this.message = this.pick('danger');
@@ -101,11 +102,12 @@ export class StackerScene extends Phaser.Scene {
             continue;
           }
           this.drops += 1;
+          this.pieceCounts[piece.pieceId!] = (this.pieceCounts[piece.pieceId!] ?? 0) + 1;
           this.packingQualitySum += placementQuality(pieceTop, this.content.renderer.dangerY, this.content.renderer.floorY);
-          this.baseScore = this.drops * this.content.stacking.pointsPerChami;
+          this.baseScore += this.content.pieces[piece.pieceId!].points;
           this.packingBonus = packingBonusFor(this.packingQualitySum, this.drops, this.content.stacking.maxPackingBonus);
           this.packingRate = Math.round(this.packingQualitySum / this.drops / 10);
-          this.score = totalScore(this.drops, this.content.stacking.pointsPerChami, this.packingBonus);
+          this.score = weightedTotalScore(this.baseScore, this.packingBonus);
           this.message = this.drops % 5 === 0 ? this.pick('milestone') : this.pick('drop');
           this.recalculateHeight();
           changed = true;
@@ -114,7 +116,7 @@ export class StackerScene extends Phaser.Scene {
       }
     }
 
-    const inDanger = this.limitViolated || this.pieces.some((piece) => piece.counted && piece.y - piece.displayHeight * 0.42 < this.content.renderer.dangerY);
+    const inDanger = this.limitViolated || this.pieces.some((piece) => piece.counted && this.pieceTop(piece) < this.content.renderer.dangerY);
     if (inDanger) {
       if (!this.dangerSince) { this.dangerSince = time; this.message = this.pick('danger'); changed = true; }
       if (time - this.dangerSince >= this.content.stacking.dangerGraceMs) { this.finishRun('limit-crossed'); return; }
@@ -145,6 +147,7 @@ export class StackerScene extends Phaser.Scene {
     this.packingQualitySum = 0;
     this.height = 0;
     this.drops = 0;
+    this.pieceCounts = {};
     this.dangerSince = 0;
     this.limitViolated = false;
     this.gameOver = false;
@@ -226,6 +229,8 @@ export class StackerScene extends Phaser.Scene {
     this.applyBody(piece, definition, false);
     const angleFactor = this.nextRandom() * 2 - 1;
     piece.setAlpha(1).setAngle(angleFactor * definition.angleJitter);
+    piece.setVelocityX(angleFactor * (this.content.stacking.randomHorizontalVelocity ?? 0));
+    piece.setAngularVelocity((this.nextRandom() * 2 - 1) * (this.content.stacking.randomAngularVelocity ?? 0));
     piece.droppedAt = this.time.now;
     this.pieces.push(piece);
     this.dropHandler?.();
@@ -235,7 +240,7 @@ export class StackerScene extends Phaser.Scene {
   private recalculateHeight(): void {
     const settled = this.pieces.filter((piece) => piece.counted);
     if (!settled.length) return;
-    const top = Math.min(...settled.map((piece) => piece.y - piece.displayHeight * 0.42));
+    const top = Math.min(...settled.map((piece) => this.pieceTop(piece)));
     const nextHeight = Math.max(0, Math.round(this.content.renderer.floorY - top));
     this.height = Math.max(this.height, nextHeight);
   }
@@ -285,18 +290,24 @@ export class StackerScene extends Phaser.Scene {
   }
 
   private finalizeScoreFromBoard(): void {
-    const eligible = this.pieces.filter((piece) => piece.counted && piece.y - piece.displayHeight * 0.42 >= this.content.renderer.dangerY);
+    const eligible = this.pieces.filter((piece) => piece.counted && this.pieceTop(piece) >= this.content.renderer.dangerY);
     this.drops = eligible.length;
-    this.packingQualitySum = eligible.reduce((sum, piece) => sum + placementQuality(piece.y - piece.displayHeight * 0.42, this.content.renderer.dangerY, this.content.renderer.floorY), 0);
-    this.baseScore = this.drops * this.content.stacking.pointsPerChami;
+    this.pieceCounts = {};
+    eligible.forEach((piece) => { this.pieceCounts[piece.pieceId!] = (this.pieceCounts[piece.pieceId!] ?? 0) + 1; });
+    this.packingQualitySum = eligible.reduce((sum, piece) => sum + placementQuality(this.pieceTop(piece), this.content.renderer.dangerY, this.content.renderer.floorY), 0);
+    this.baseScore = Object.entries(this.pieceCounts).reduce((sum, [id, count]) => sum + this.content.pieces[id].points * count, 0);
     this.packingBonus = packingBonusFor(this.packingQualitySum, this.drops, this.content.stacking.maxPackingBonus);
     this.packingRate = this.drops ? Math.round(this.packingQualitySum / this.drops / 10) : 0;
-    this.score = totalScore(this.drops, this.content.stacking.pointsPerChami, this.packingBonus);
+    this.score = weightedTotalScore(this.baseScore, this.packingBonus);
     this.recalculateHeight();
   }
 
   private emitState(): void {
-    const nearLimit = this.pieces.some((piece) => piece.counted && piece.y - piece.displayHeight * 0.42 < this.content.renderer.dangerY + 120);
-    this.stateHandler?.({ score: this.score, baseScore: this.baseScore, packingBonus: this.packingBonus, packingRate: this.packingRate, height: this.height, drops: this.drops, bestScore: Math.max(this.saveData.bestScore, this.score), nextPieces: [...this.queue].slice(0, this.content.stacking.nextPreviewCount), message: this.message, gameOver: this.gameOver, nearLimit, gameOverReason: this.gameOverReason, runSeed: this.runSeed });
+    const nearLimit = this.pieces.some((piece) => piece.counted && this.pieceTop(piece) < this.content.renderer.dangerY + 120);
+    this.stateHandler?.({ score: this.score, baseScore: this.baseScore, packingBonus: this.packingBonus, packingRate: this.packingRate, height: this.height, drops: this.drops, pieceCounts: { ...this.pieceCounts }, bestScore: Math.max(this.saveData.bestScore, this.score), nextPieces: [...this.queue].slice(0, this.content.stacking.nextPreviewCount), message: this.message, gameOver: this.gameOver, nearLimit, gameOverReason: this.gameOverReason, runSeed: this.runSeed });
+  }
+
+  private pieceTop(piece: ChamiPiece): number {
+    return (piece.body as MatterJS.BodyType).bounds.min.y;
   }
 }

@@ -33,6 +33,7 @@ function validatePiece(id: string, piece: StackerPieceDefinition, data: StackerG
   if (!data.assets.images[piece.texture]) issues.push(`${path}.texture: 존재하지 않는 이미지 '${piece.texture}'`);
   if (!['circle', 'capsule', 'rectangle', 'trapezoid'].includes(piece.shape)) issues.push(`${path}.shape: 지원하지 않는 충돌체입니다.`);
   if (!(piece.width > 0) || !(piece.height > 0)) issues.push(`${path}: width와 height는 0보다 커야 합니다.`);
+  if (!Number.isSafeInteger(piece.points) || piece.points <= 0) issues.push(`${path}.points: 0보다 큰 정수여야 합니다.`);
   if (piece.shape === 'circle' && (!(piece.radius ?? 0) || piece.radius! > Math.min(piece.width, piece.height) / 2)) issues.push(`${path}.radius: 원형 반지름이 유효하지 않습니다.`);
   if (!(piece.mass > 0)) issues.push(`${path}.mass: 0보다 커야 합니다.`);
   if (piece.friction < 0 || piece.friction > 1) issues.push(`${path}.friction: 0~1 범위여야 합니다.`);
@@ -61,7 +62,7 @@ export function validateStackerContent(data: StackerGameProtocol): string[] {
   if (!(data.renderer?.width > 0) || !(data.renderer?.height > 0)) issues.push('renderer: 유효한 화면 크기가 필요합니다.');
   if (!(data.renderer?.dangerY > data.stacking?.previewY && data.renderer.dangerY < data.renderer.floorY)) issues.push('renderer.dangerY: previewY와 floorY 사이여야 합니다.');
   if (!(data.renderer?.arenaWidth > 0 && data.renderer.arenaWidth <= data.renderer.width)) issues.push('renderer.arenaWidth: 화면 너비 이하여야 합니다.');
-  if (!(data.stacking?.pointsPerChami > data.stacking?.maxPackingBonus)) issues.push('stacking.pointsPerChami: maxPackingBonus보다 커야 합니다.');
+  if (Object.values(data.pieces).some((piece) => piece.points <= data.stacking.maxPackingBonus)) issues.push('pieces.points: 모든 크기 점수는 최대 밀집도 보너스보다 커야 합니다.');
   if (!data.stacking?.bag?.length) issues.push('stacking.bag: 랜덤 주머니에 차미가 하나 이상 필요합니다.');
   data.stacking?.bag?.forEach((id) => { if (!data.pieces[id]) issues.push(`stacking.bag: 존재하지 않는 차미 '${id}'`); });
   (['start', 'drop', 'milestone', 'danger', 'gameOver'] as const).forEach((key) => {

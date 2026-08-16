@@ -31,6 +31,13 @@ document.body.innerHTML = `
     </header>
     <section class="game-layout">
       <aside class="score-panel" aria-label="현재 기록">
+        <button id="score-info" class="score-info" type="button" aria-expanded="false" aria-controls="score-help" title="점수 규칙 보기">i</button>
+        <section id="score-help" class="score-help" hidden>
+          <strong>점수는 이렇게 계산해요</strong>
+          <p id="score-size-rule"></p>
+          <p id="score-bonus-rule"></p>
+          <small>총점이 높은 순서로 순위가 정해지고, 동점이면 밀집도와 차미 개수를 차례로 비교해요.</small>
+        </section>
         <div><span>점수</span><strong id="score">0</strong></div>
         <div><span>쌓은 차미</span><strong><b id="drops">0</b>개</strong></div>
         <div><span>최고점</span><strong id="best-score">0</strong></div>
@@ -46,7 +53,7 @@ document.body.innerHTML = `
             <h2 id="result-title">이번 차미탑은 여기까지!</h2>
             <strong id="result-score">0</strong><small>FINAL SCORE</small>
             <dl class="score-breakdown">
-              <div><dt>차미 개수 점수</dt><dd id="result-base-score">0</dd></div>
+              <div><dt>차미 크기 점수</dt><dd id="result-base-score">0</dd></div>
               <div><dt>빈틈 보너스</dt><dd id="result-packing-bonus">0</dd></div>
               <div><dt>평균 밀집도</dt><dd id="result-packing-rate">0%</dd></div>
             </dl>
@@ -135,6 +142,20 @@ async function boot(): Promise<void> {
     });
     element('#game-title').textContent = content.game.title;
     element('#game-subtitle').textContent = content.game.subtitle;
+    const sizePoints = [...new Set(Object.values(content.pieces).map((piece) => piece.points))].sort((a, b) => a - b);
+    element('#score-size-rule').textContent = `차미 크기 점수: 작은 차미 ${sizePoints[0].toLocaleString()}점 · 중간 차미 ${sizePoints[1].toLocaleString()}점 · 큰 차미 ${sizePoints[2].toLocaleString()}점`;
+    element('#score-bonus-rule').textContent = `밀집도 보너스: 차미를 낮고 촘촘하게 둘수록 0~${content.stacking.maxPackingBonus.toLocaleString()}점`;
+    const scoreInfo = element<HTMLButtonElement>('#score-info');
+    const scoreHelp = element<HTMLElement>('#score-help');
+    const closeScoreHelp = () => { scoreHelp.hidden = true; scoreInfo.setAttribute('aria-expanded', 'false'); };
+    scoreInfo.onclick = (event) => {
+      event.stopPropagation();
+      scoreHelp.hidden = !scoreHelp.hidden;
+      scoreInfo.setAttribute('aria-expanded', String(!scoreHelp.hidden));
+    };
+    scoreHelp.onclick = (event) => event.stopPropagation();
+    document.addEventListener('click', closeScoreHelp);
+    document.addEventListener('keydown', (event) => { if (event.key === 'Escape') closeScoreHelp(); });
     if (content.renderer.backgroundImage) document.documentElement.style.setProperty('--page-bg', `url("${content.assets.images[content.renderer.backgroundImage].src}")`);
     const title = content.titleScreen;
     element<HTMLImageElement>('#title-art').src = content.assets.images[title.art].src;

@@ -20,6 +20,8 @@ function isEntry(value: unknown): value is LocalScoreEntry {
     && Number.isFinite(entry.packingBonus)
     && Number.isFinite(entry.packingRate)
     && Number.isFinite(entry.drops)
+    && !!entry.pieceCounts
+    && typeof entry.pieceCounts === 'object'
     && typeof entry.runSeed === 'string'
     && typeof entry.playedAt === 'string';
 }
@@ -73,6 +75,8 @@ export class OnlineLeaderboard {
       body: JSON.stringify({
         nickname: entry.nickname,
         drops: entry.drops,
+        baseScore: entry.baseScore,
+        pieceCounts: entry.pieceCounts,
         packingBonus: entry.packingBonus,
         packingRate: entry.packingRate,
         height: entry.height,

@@ -5,13 +5,14 @@ import { StackerSaveManager } from './StackerSaveManager';
 
 const content = JSON.parse(readFileSync(new URL('../../public/game-data/stacker.json', import.meta.url), 'utf8')) as StackerGameProtocol;
 const finalState: StackerRunState = {
-  score: 12_500,
+  score: 10_750,
   baseScore: 10_000,
-  packingBonus: 2_500,
+  packingBonus: 750,
   packingRate: 25,
   height: 120,
   drops: 1,
-  bestScore: 12_500,
+  pieceCounts: { 'round-m': 1 },
+  bestScore: 10_750,
   nextPieces: [],
   message: '',
   gameOver: true,
