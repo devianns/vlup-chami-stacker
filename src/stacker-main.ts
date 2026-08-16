@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import './fonts.css';
 import './stacker.css';
 import { ContentError, loadStackerContent } from './game/StackerContentLoader';
 import { StackerScene } from './game/StackerScene';

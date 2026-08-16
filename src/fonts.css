@@ -1,0 +1,7 @@
+@font-face {
+  font-family: "Pretendard Title";
+  src: url("../node_modules/pretendard/dist/web/static/woff2/Pretendard-Black.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 900;
+  font-display: swap;
+}

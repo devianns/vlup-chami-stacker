@@ -88,6 +88,17 @@ Vercel에 게임 전체를 배포하면 같은 출처의 `/api/leaderboard`를 �
 - 타이틀 키아트: `public/assets/title/`
 - 파비콘: `public/chami-favicon.png`
 
+## 글꼴 라이선스
+
+대기 화면 로고와 인게임 상단 제목에는 프로젝트에 포함된 **Pretendard Black 900 v1.3.9**를 사용합니다.
+
+- 제작자: Kil Hyung-jin
+- 저작권: Copyright © 2021 Kil Hyung-jin, Reserved Font Name `Pretendard`
+- 라이선스: [SIL Open Font License 1.1](https://github.com/orioncactus/pretendard/blob/main/LICENSE)
+- 공식 저장소: [orioncactus/pretendard](https://github.com/orioncactus/pretendard)
+
+Pretendard는 OFL 1.1에 따라 소프트웨어와 함께 사용·임베딩·재배포할 수 있습니다. 폰트 파일 자체를 단독 판매하지 않으며, 글꼴명과 라이선스 고지를 유지합니다. 배포본에는 제목용 Black 900 파일만 포함하며, 게임의 나머지 본문은 기존 글꼴 스택을 사용합니다.
+
 <!-- 아래는 교체 전 RPG 문서의 보존본이며 렌더링하지 않습니다.
 
 # Data-driven SSG RPG Engine · 별빛 골짜기
