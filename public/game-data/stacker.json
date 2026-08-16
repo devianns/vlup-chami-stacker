@@ -5,7 +5,7 @@
     "id": "chami-stacker",
     "title": "차미야, 튀어나오면 안 돼!",
     "subtitle": "빨간 선을 넘지 않게 차미를 최대한 많이, 빈틈없이 넣어 보세요.",
-    "version": "3.0.0"
+    "version": "3.0.1"
   },
   "renderer": {
     "width": 720,
@@ -106,31 +106,25 @@
     },
     "wobble-s": {
       "name": "작은 삐딱 차미", "points": 6000,
-      "texture": "chami_wobble", "shape": "trapezoid", "width": 107, "height": 113,
+      "texture": "chami_wobble", "shape": "fromVertices", "width": 107, "height": 113,
       "mass": 0.68, "friction": 0.2, "frictionAir": 0.004, "restitution": 0.18, "angleJitter": 16,
-      "collisionWidthScale": 0.74, "collisionHeightScale": 0.68, "trapezoidSlope": 0.24,
-      "renderOrigin": { "x": 0.56, "y": 0.58 }, "centerOfMass": { "x": 0.025, "y": 0.04 }
+      "collisionVertices": [{ "x": 0.49, "y": 0.28 }, { "x": 0.64, "y": 0.29 }, { "x": 0.76, "y": 0.37 }, { "x": 0.84, "y": 0.50 }, { "x": 0.88, "y": 0.66 }, { "x": 0.84, "y": 0.80 }, { "x": 0.74, "y": 0.88 }, { "x": 0.59, "y": 0.91 }, { "x": 0.44, "y": 0.86 }, { "x": 0.34, "y": 0.74 }, { "x": 0.29, "y": 0.58 }, { "x": 0.31, "y": 0.44 }, { "x": 0.39, "y": 0.33 }]
     },
     "wobble-m": {
       "name": "중간 삐딱 차미", "points": 10000,
       "texture": "chami_wobble",
-      "shape": "trapezoid",
+      "shape": "fromVertices",
       "width": 142,
       "height": 150,
       "mass": 1,
       "friction": 0.2, "frictionAir": 0.004, "restitution": 0.18, "angleJitter": 16,
-      "collisionWidthScale": 0.74,
-      "collisionHeightScale": 0.68,
-      "trapezoidSlope": 0.24,
-      "renderOrigin": { "x": 0.56, "y": 0.58 },
-      "centerOfMass": { "x": 0.025, "y": 0.04 }
+      "collisionVertices": [{ "x": 0.49, "y": 0.28 }, { "x": 0.64, "y": 0.29 }, { "x": 0.76, "y": 0.37 }, { "x": 0.84, "y": 0.50 }, { "x": 0.88, "y": 0.66 }, { "x": 0.84, "y": 0.80 }, { "x": 0.74, "y": 0.88 }, { "x": 0.59, "y": 0.91 }, { "x": 0.44, "y": 0.86 }, { "x": 0.34, "y": 0.74 }, { "x": 0.29, "y": 0.58 }, { "x": 0.31, "y": 0.44 }, { "x": 0.39, "y": 0.33 }]
     },
     "wobble-l": {
       "name": "큰 삐딱 차미", "points": 15000,
-      "texture": "chami_wobble", "shape": "trapezoid", "width": 174, "height": 184,
+      "texture": "chami_wobble", "shape": "fromVertices", "width": 174, "height": 184,
       "mass": 1.34, "friction": 0.2, "frictionAir": 0.004, "restitution": 0.18, "angleJitter": 16,
-      "collisionWidthScale": 0.74, "collisionHeightScale": 0.68, "trapezoidSlope": 0.24,
-      "renderOrigin": { "x": 0.56, "y": 0.58 }, "centerOfMass": { "x": 0.025, "y": 0.04 }
+      "collisionVertices": [{ "x": 0.49, "y": 0.28 }, { "x": 0.64, "y": 0.29 }, { "x": 0.76, "y": 0.37 }, { "x": 0.84, "y": 0.50 }, { "x": 0.88, "y": 0.66 }, { "x": 0.84, "y": 0.80 }, { "x": 0.74, "y": 0.88 }, { "x": 0.59, "y": 0.91 }, { "x": 0.44, "y": 0.86 }, { "x": 0.34, "y": 0.74 }, { "x": 0.29, "y": 0.58 }, { "x": 0.31, "y": 0.44 }, { "x": 0.39, "y": 0.33 }]
     }
   },
   "presenter": {

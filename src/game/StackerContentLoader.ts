@@ -31,7 +31,7 @@ async function validateAssets(data: StackerGameProtocol): Promise<string[]> {
 function validatePiece(id: string, piece: StackerPieceDefinition, data: StackerGameProtocol, issues: string[]): void {
   const path = `pieces.${id}`;
   if (!data.assets.images[piece.texture]) issues.push(`${path}.texture: 존재하지 않는 이미지 '${piece.texture}'`);
-  if (!['circle', 'capsule', 'rectangle', 'trapezoid'].includes(piece.shape)) issues.push(`${path}.shape: 지원하지 않는 충돌체입니다.`);
+  if (!['circle', 'capsule', 'rectangle', 'trapezoid', 'fromVertices'].includes(piece.shape)) issues.push(`${path}.shape: 지원하지 않는 충돌체입니다.`);
   if (!(piece.width > 0) || !(piece.height > 0)) issues.push(`${path}: width와 height는 0보다 커야 합니다.`);
   if (!Number.isSafeInteger(piece.points) || piece.points <= 0) issues.push(`${path}.points: 0보다 큰 정수여야 합니다.`);
   if (piece.shape === 'circle' && (!(piece.radius ?? 0) || piece.radius! > Math.min(piece.width, piece.height) / 2)) issues.push(`${path}.radius: 원형 반지름이 유효하지 않습니다.`);
@@ -41,6 +41,8 @@ function validatePiece(id: string, piece: StackerPieceDefinition, data: StackerG
   if (piece.collisionWidthScale !== undefined && (!(piece.collisionWidthScale > 0) || piece.collisionWidthScale > 1)) issues.push(`${path}.collisionWidthScale: 0보다 크고 1 이하여야 합니다.`);
   if (piece.collisionHeightScale !== undefined && (!(piece.collisionHeightScale > 0) || piece.collisionHeightScale > 1)) issues.push(`${path}.collisionHeightScale: 0보다 크고 1 이하여야 합니다.`);
   if (piece.trapezoidSlope !== undefined && (piece.trapezoidSlope < 0 || piece.trapezoidSlope > 1)) issues.push(`${path}.trapezoidSlope: 0~1 범위여야 합니다.`);
+  if (piece.shape === 'fromVertices' && (!piece.collisionVertices || piece.collisionVertices.length < 3)) issues.push(`${path}.collisionVertices: 꼭짓점이 3개 이상 필요합니다.`);
+  if (piece.collisionVertices?.some((vertex) => vertex.x < 0 || vertex.x > 1 || vertex.y < 0 || vertex.y > 1)) issues.push(`${path}.collisionVertices: 모든 좌표는 0~1 범위여야 합니다.`);
   if (piece.renderOrigin && (!(piece.renderOrigin.x >= 0 && piece.renderOrigin.x <= 1) || !(piece.renderOrigin.y >= 0 && piece.renderOrigin.y <= 1))) issues.push(`${path}.renderOrigin: x와 y는 0~1 범위여야 합니다.`);
 }
 

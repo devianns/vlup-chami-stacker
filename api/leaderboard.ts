@@ -1,7 +1,7 @@
 import { neon } from '@neondatabase/serverless';
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 
-const CONTENT_VERSION = '3.0.0';
+const CONTENT_VERSION = '3.0.1';
 const MAX_PACKING_BONUS = 2_999;
 const MAX_ENTRIES = 20;
 const PIECE_POINTS: Record<string, number> = {
