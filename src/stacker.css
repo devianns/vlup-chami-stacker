@@ -125,3 +125,83 @@ html,body{height:100%;overflow:hidden}.app-shell{height:100dvh;max-height:100dvh
   .score-help{top:calc(100% + 7px);right:0;left:auto;width:min(390px,calc(100vw - 12px))}
   .game-legal-watermark{right:auto;bottom:max(8px,env(safe-area-inset-bottom));left:8px;max-width:calc(100vw - 126px);padding:4px 8px;border-radius:10px;font-size:7px;text-align:left;transform:none}.game-legal-watermark span{font-size:6px}
 }
+
+/* Final mobile layout: every UI area owns a grid row; the action dock never covers the playfield. */
+@media(max-width:900px){
+  html,body{width:100%;height:100%;min-width:320px;overflow:hidden;overscroll-behavior:none}
+  .app-shell{
+    width:100%;height:100dvh;min-height:0;max-height:none;
+    padding:max(6px,env(safe-area-inset-top)) 6px calc(56px + env(safe-area-inset-bottom));
+  }
+  .game-layout{
+    width:100%;height:100%;min-width:0;min-height:0;
+    grid-template-columns:minmax(0,1fr);
+    grid-template-rows:50px minmax(0,1fr) 76px;
+    gap:6px;overflow:hidden;
+  }
+  .score-panel{
+    grid-row:1;width:100%;height:50px;min-height:50px;max-height:50px;
+    padding:4px 34px 4px 4px;border-radius:15px;overflow:visible!important;
+  }
+  .score-panel div{min-width:0;padding:3px 1px}
+  .score-panel span{overflow:hidden;font-size:9px;text-overflow:ellipsis;white-space:nowrap}
+  .score-panel strong{font-size:14px;line-height:1.1}
+  .score-info{top:50%;right:7px;width:24px;height:24px;transform:translateY(-50%)}
+  .stage-wrap{
+    grid-row:2;width:auto;height:100%;min-width:0;min-height:0;max-width:100%;max-height:100%;
+    margin:auto;aspect-ratio:3/4;
+  }
+  .next-panel{
+    grid-row:3;display:grid;width:100%;height:76px;min-height:76px;max-height:76px;
+    grid-template-columns:minmax(0,1fr) 108px;gap:5px;padding:3px 6px;
+    border-radius:15px;overflow:hidden;
+  }
+  .host-row{display:flex;min-width:0;height:100%;align-items:center;overflow:hidden}
+  .presenter-stage{display:block;flex:0 0 62px;width:62px;height:68px;overflow:hidden}
+  .next-panel .presenter{display:block;width:62px;height:76px;margin:0}
+  .next-panel .speech{display:flex!important;min-width:0;height:54px;min-height:0;margin:0 0 0 -3px;padding:5px 7px;overflow:hidden}
+  .next-panel .speech p{display:-webkit-box;overflow:hidden;-webkit-box-orient:vertical;-webkit-line-clamp:3;font-size:9px;line-height:1.35}
+  .next-queue{display:block;min-width:0;margin:0;overflow:hidden}
+  .next-queue>span{display:block;margin-bottom:2px;font-size:8px}
+  .next-queue #next-pieces{display:flex;width:100%;min-width:0;gap:2px;justify-content:center;overflow:hidden}
+  .next-panel figure{flex:0 1 50%;width:auto;min-width:0;margin:0;padding:2px}
+  .next-panel img{width:100%;height:42px;object-fit:contain}
+  .next-panel figcaption{overflow:hidden;font-size:7px;text-overflow:ellipsis;white-space:nowrap}
+  .floating-actions{
+    right:max(6px,env(safe-area-inset-right))!important;
+    bottom:max(6px,env(safe-area-inset-bottom))!important;
+    flex-direction:row;gap:6px;
+  }
+  .floating-actions .sound-toggle,.floating-actions .floating-ranking,.floating-actions .floating-notice{
+    width:42px;height:42px;min-width:42px;min-height:42px;
+  }
+  .floating-actions button i{font-size:16px}
+  .game-legal-watermark{
+    right:auto;bottom:max(7px,env(safe-area-inset-bottom));left:7px;
+    max-width:calc(100vw - 150px);padding:3px 6px;border-radius:8px;
+    font-size:6px;line-height:1.2;text-align:left;transform:none;
+  }
+  .game-legal-watermark span{font-size:5px}
+}
+
+@media(max-width:370px){
+  .next-panel{grid-template-columns:minmax(0,1fr) 92px}
+  .presenter-stage{flex-basis:50px;width:50px}
+  .next-panel .presenter{width:50px}
+  .next-panel .speech p{-webkit-line-clamp:2;font-size:8px}
+  .floating-actions .sound-toggle,.floating-actions .floating-ranking,.floating-actions .floating-notice{width:40px;height:40px;min-width:40px;min-height:40px}
+  .game-legal-watermark{max-width:calc(100vw - 148px)}
+}
+
+@media(max-width:900px) and (max-height:640px){
+  .app-shell{padding-bottom:calc(50px + env(safe-area-inset-bottom))}
+  .game-layout{grid-template-rows:44px minmax(0,1fr) 62px;gap:4px}
+  .score-panel{height:44px;min-height:44px;max-height:44px}
+  .next-panel{height:62px;min-height:62px;max-height:62px}
+  .presenter-stage{height:56px}
+  .next-panel .presenter{height:64px}
+  .next-panel .speech{height:46px}
+  .next-panel img{height:33px}
+  .floating-actions .sound-toggle,.floating-actions .floating-ranking,.floating-actions .floating-notice{width:38px;height:38px;min-width:38px;min-height:38px}
+  .game-legal-watermark{max-width:calc(100vw - 148px)}
+}
