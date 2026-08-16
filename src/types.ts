@@ -1,4 +1,4 @@
-export type PieceShape = 'circle' | 'capsule' | 'rectangle';
+export type PieceShape = 'circle' | 'capsule' | 'rectangle' | 'trapezoid';
 
 export interface ImageAsset { src: string }
 
@@ -14,6 +14,10 @@ export interface StackerPieceDefinition {
   frictionAir: number;
   restitution: number;
   angleJitter: number;
+  collisionWidthScale?: number;
+  collisionHeightScale?: number;
+  trapezoidSlope?: number;
+  renderOrigin?: { x: number; y: number };
   centerOfMass?: { x: number; y: number };
 }
 

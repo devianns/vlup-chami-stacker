@@ -31,12 +31,16 @@ async function validateAssets(data: StackerGameProtocol): Promise<string[]> {
 function validatePiece(id: string, piece: StackerPieceDefinition, data: StackerGameProtocol, issues: string[]): void {
   const path = `pieces.${id}`;
   if (!data.assets.images[piece.texture]) issues.push(`${path}.texture: 존재하지 않는 이미지 '${piece.texture}'`);
-  if (!['circle', 'capsule', 'rectangle'].includes(piece.shape)) issues.push(`${path}.shape: 지원하지 않는 충돌체입니다.`);
+  if (!['circle', 'capsule', 'rectangle', 'trapezoid'].includes(piece.shape)) issues.push(`${path}.shape: 지원하지 않는 충돌체입니다.`);
   if (!(piece.width > 0) || !(piece.height > 0)) issues.push(`${path}: width와 height는 0보다 커야 합니다.`);
   if (piece.shape === 'circle' && (!(piece.radius ?? 0) || piece.radius! > Math.min(piece.width, piece.height) / 2)) issues.push(`${path}.radius: 원형 반지름이 유효하지 않습니다.`);
   if (!(piece.mass > 0)) issues.push(`${path}.mass: 0보다 커야 합니다.`);
   if (piece.friction < 0 || piece.friction > 1) issues.push(`${path}.friction: 0~1 범위여야 합니다.`);
   if (piece.restitution < 0 || piece.restitution > 1) issues.push(`${path}.restitution: 0~1 범위여야 합니다.`);
+  if (piece.collisionWidthScale !== undefined && (!(piece.collisionWidthScale > 0) || piece.collisionWidthScale > 1)) issues.push(`${path}.collisionWidthScale: 0보다 크고 1 이하여야 합니다.`);
+  if (piece.collisionHeightScale !== undefined && (!(piece.collisionHeightScale > 0) || piece.collisionHeightScale > 1)) issues.push(`${path}.collisionHeightScale: 0보다 크고 1 이하여야 합니다.`);
+  if (piece.trapezoidSlope !== undefined && (piece.trapezoidSlope < 0 || piece.trapezoidSlope > 1)) issues.push(`${path}.trapezoidSlope: 0~1 범위여야 합니다.`);
+  if (piece.renderOrigin && (!(piece.renderOrigin.x >= 0 && piece.renderOrigin.x <= 1) || !(piece.renderOrigin.y >= 0 && piece.renderOrigin.y <= 1))) issues.push(`${path}.renderOrigin: x와 y는 0~1 범위여야 합니다.`);
 }
 
 export function validateStackerContent(data: StackerGameProtocol): string[] {

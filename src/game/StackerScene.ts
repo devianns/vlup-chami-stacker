@@ -181,6 +181,7 @@ export class StackerScene extends Phaser.Scene {
     const definition = this.content.pieces[id];
     const image = this.matter.add.image(this.content.renderer.width / 2, this.content.stacking.previewY, definition.texture, undefined, { isStatic: true, isSensor: true }) as ChamiPiece;
     image.setDisplaySize(definition.width, definition.height).setDepth(3).setAlpha(0.9);
+    if (definition.renderOrigin) image.setOrigin(definition.renderOrigin.x, definition.renderOrigin.y);
     image.pieceId = id;
     this.applyBody(image, definition, true);
     this.preview = image;
@@ -188,8 +189,20 @@ export class StackerScene extends Phaser.Scene {
   }
 
   private applyBody(image: ChamiPiece, definition: StackerPieceDefinition, preview: boolean): void {
+    const bodyWidth = definition.width * (definition.collisionWidthScale ?? 0.82);
+    const bodyHeight = definition.height * (definition.collisionHeightScale ?? (definition.shape === 'capsule' ? 0.78 : 0.86));
     if (definition.shape === 'circle') image.setCircle(definition.radius ?? Math.min(definition.width, definition.height) / 2);
-    else image.setRectangle(definition.width * 0.82, definition.height * (definition.shape === 'capsule' ? 0.78 : 0.86));
+    else if (definition.shape === 'trapezoid') image.setTrapezoid(bodyWidth, bodyHeight, definition.trapezoidSlope ?? 0.22);
+    else image.setRectangle(bodyWidth, bodyHeight);
+    if (definition.centerOfMass) {
+      const body = image.body as MatterJS.BodyType;
+      const offsetX = bodyWidth * definition.centerOfMass.x;
+      const offsetY = bodyHeight * definition.centerOfMass.y;
+      body.position.x += offsetX;
+      body.position.y += offsetY;
+      body.positionPrev.x += offsetX;
+      body.positionPrev.y += offsetY;
+    }
     image.setStatic(preview).setSensor(preview).setFriction(definition.friction).setFrictionAir(definition.frictionAir).setBounce(definition.restitution).setMass(definition.mass);
   }
 

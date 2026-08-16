@@ -5,7 +5,7 @@
     "id": "chami-stacker",
     "title": "차미야, 튀어나오면 안 돼!",
     "subtitle": "빨간 선을 넘지 않게 차미를 최대한 많이, 빈틈없이 넣어 보세요.",
-    "version": "2.1.0"
+    "version": "2.2.0"
   },
   "renderer": {
     "width": 720,
@@ -85,7 +85,7 @@
     "wobble": {
       "name": "삐딱 차미",
       "texture": "chami_wobble",
-      "shape": "rectangle",
+      "shape": "trapezoid",
       "width": 142,
       "height": 150,
       "mass": 1,
@@ -93,7 +93,11 @@
       "frictionAir": 0.008,
       "restitution": 0.12,
       "angleJitter": 12,
-      "centerOfMass": { "x": 0.1, "y": 0.03 }
+      "collisionWidthScale": 0.74,
+      "collisionHeightScale": 0.68,
+      "trapezoidSlope": 0.24,
+      "renderOrigin": { "x": 0.56, "y": 0.58 },
+      "centerOfMass": { "x": 0.025, "y": 0.04 }
     }
   },
   "presenter": {
