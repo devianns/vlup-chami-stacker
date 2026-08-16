@@ -29,7 +29,8 @@ export class StackerScene extends Phaser.Scene {
   private gameOver = false;
   private gameOverReason: GameOverReason | null = null;
   private runSeed = '';
-  private sequenceIndex = 0;
+  private bagQueue: string[] = [];
+  private randomState = 1;
   private message = '';
   private saveData: StackerSaveData;
   private lastDropAt = 0;
@@ -133,6 +134,7 @@ export class StackerScene extends Phaser.Scene {
     this.preview = undefined;
     this.pieces = [];
     this.queue = [];
+    this.bagQueue = [];
     this.score = 0;
     this.baseScore = 0;
     this.packingBonus = 0;
@@ -145,7 +147,7 @@ export class StackerScene extends Phaser.Scene {
     this.gameOver = false;
     this.gameOverReason = null;
     this.runSeed = this.createRunSeed();
-    this.sequenceIndex = 0;
+    this.randomState = this.seedNumber(this.runSeed);
     this.message = this.pick('start');
     this.fillQueue();
     this.spawnPreview();
@@ -154,9 +156,18 @@ export class StackerScene extends Phaser.Scene {
 
   private fillQueue(): void {
     while (this.queue.length < this.content.stacking.nextPreviewCount + 1) {
-      this.queue.push(this.content.stacking.sequence[this.sequenceIndex % this.content.stacking.sequence.length]);
-      this.sequenceIndex += 1;
+      if (!this.bagQueue.length) this.bagQueue = this.shuffleBag(this.content.stacking.bag);
+      this.queue.push(this.bagQueue.shift()!);
     }
+  }
+
+  private shuffleBag(source: string[]): string[] {
+    const bag = [...source];
+    for (let index = bag.length - 1; index > 0; index -= 1) {
+      const swapIndex = Math.floor(this.nextRandom() * (index + 1));
+      [bag[index], bag[swapIndex]] = [bag[swapIndex], bag[index]];
+    }
+    return bag;
   }
 
   private spawnPreview(): void {
@@ -197,7 +208,7 @@ export class StackerScene extends Phaser.Scene {
     this.preview = undefined;
     this.lastDropAt = this.time.now;
     this.applyBody(piece, definition, false);
-    const angleFactor = (((this.pieces.length * 37) % 101) / 50) - 1;
+    const angleFactor = this.nextRandom() * 2 - 1;
     piece.setAlpha(1).setAngle(angleFactor * definition.angleJitter);
     piece.droppedAt = this.time.now;
     this.pieces.push(piece);
@@ -214,6 +225,7 @@ export class StackerScene extends Phaser.Scene {
 
   private finishRun(reason: GameOverReason): void {
     if (this.gameOver) return;
+    this.finalizeScoreFromBoard();
     this.gameOver = true;
     this.gameOverReason = reason;
     this.preview?.destroy();
@@ -239,6 +251,31 @@ export class StackerScene extends Phaser.Scene {
     const values = new Uint32Array(2);
     globalThis.crypto?.getRandomValues?.(values);
     return `${Date.now().toString(36)}-${values[0].toString(36)}${values[1].toString(36)}`;
+  }
+
+  private seedNumber(seed: string): number {
+    let value = 2166136261;
+    for (let index = 0; index < seed.length; index += 1) value = Math.imul(value ^ seed.charCodeAt(index), 16777619);
+    return value >>> 0 || 1;
+  }
+
+  private nextRandom(): number {
+    this.randomState = (this.randomState + 0x6D2B79F5) >>> 0;
+    let value = this.randomState;
+    value = Math.imul(value ^ value >>> 15, value | 1);
+    value ^= value + Math.imul(value ^ value >>> 7, value | 61);
+    return ((value ^ value >>> 14) >>> 0) / 4294967296;
+  }
+
+  private finalizeScoreFromBoard(): void {
+    const eligible = this.pieces.filter((piece) => piece.counted && piece.y - piece.displayHeight * 0.42 >= this.content.renderer.dangerY);
+    this.drops = eligible.length;
+    this.packingQualitySum = eligible.reduce((sum, piece) => sum + placementQuality(piece.y - piece.displayHeight * 0.42, this.content.renderer.dangerY, this.content.renderer.floorY), 0);
+    this.baseScore = this.drops * this.content.stacking.pointsPerChami;
+    this.packingBonus = packingBonusFor(this.packingQualitySum, this.drops, this.content.stacking.maxPackingBonus);
+    this.packingRate = this.drops ? Math.round(this.packingQualitySum / this.drops / 10) : 0;
+    this.score = totalScore(this.drops, this.content.stacking.pointsPerChami, this.packingBonus);
+    this.recalculateHeight();
   }
 
   private emitState(): void {

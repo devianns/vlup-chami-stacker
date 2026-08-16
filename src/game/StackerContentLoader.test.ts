@@ -22,10 +22,10 @@ describe('stacker content protocol', () => {
     expect(validateStackerContent(broken).some((issue) => issue.startsWith('renderer.dangerY'))).toBe(true);
   });
 
-  it('rejects a sequence containing an unknown Chami', () => {
+  it('rejects a random bag containing an unknown Chami', () => {
     const broken = structuredClone(content);
-    broken.stacking.sequence.push('unknown-chami');
-    expect(validateStackerContent(broken)).toContain("stacking.sequence: 존재하지 않는 차미 'unknown-chami'");
+    broken.stacking.bag.push('unknown-chami');
+    expect(validateStackerContent(broken)).toContain("stacking.bag: 존재하지 않는 차미 'unknown-chami'");
   });
 
   it('keeps one Chami worth more than the maximum packing bonus', () => {

@@ -29,7 +29,7 @@
     "nextPreviewCount": 2,
     "pointsPerChami": 10000,
     "maxPackingBonus": 9999,
-    "sequence": ["round", "wide", "round", "wobble", "round", "wide", "tall", "round", "wobble", "wide", "round", "tall"]
+    "bag": ["round", "round", "round", "round", "wide", "wide", "wide", "wobble", "wobble", "tall", "tall", "round"]
   },
   "assets": {
     "images": {
@@ -111,7 +111,7 @@
     "cta": "게임 시작"
   },
   "dialogue": {
-    "start": ["좋아, 천천히 하나씩 올려 보자!", "준비됐지? 차미탑을 멋지게 쌓아 보자!"],
+    "start": ["어떤 차미가 나올까? 빈틈을 잘 찾아 보자!", "차미는 무작위로 나와. 다음 차미도 꼭 확인해!"],
     "drop": ["좋아, 제대로 올라갔어!", "오, 생각보다 안정적인데?", "방금 조금 흔들렸지만… 못 본 걸로!"],
     "milestone": ["차미가 다섯 개나 들어갔어! 빈틈을 잘 찾았네.", "좋아! 아직 자리가 더 보여."],
     "danger": ["빨간 선에 가까워졌어. 남은 틈을 잘 찾아 봐!", "이제 공간이 얼마 안 남았어. 신중하게 놓자!"],

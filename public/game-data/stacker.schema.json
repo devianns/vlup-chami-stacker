@@ -29,8 +29,8 @@
     "stacking": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["previewY", "spawnPadding", "dangerGraceMs", "nextPreviewCount", "pointsPerChami", "maxPackingBonus", "sequence"],
-      "properties": { "previewY": { "type": "number" }, "spawnPadding": { "type": "number", "minimum": 0 }, "dangerGraceMs": { "type": "number", "minimum": 0 }, "nextPreviewCount": { "type": "integer", "minimum": 1 }, "pointsPerChami": { "type": "integer", "minimum": 2 }, "maxPackingBonus": { "type": "integer", "minimum": 0 }, "sequence": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 } } }
+      "required": ["previewY", "spawnPadding", "dangerGraceMs", "nextPreviewCount", "pointsPerChami", "maxPackingBonus", "bag"],
+      "properties": { "previewY": { "type": "number" }, "spawnPadding": { "type": "number", "minimum": 0 }, "dangerGraceMs": { "type": "number", "minimum": 0 }, "nextPreviewCount": { "type": "integer", "minimum": 1 }, "pointsPerChami": { "type": "integer", "minimum": 2 }, "maxPackingBonus": { "type": "integer", "minimum": 0 }, "bag": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 } } }
     },
     "assets": {
       "type": "object",

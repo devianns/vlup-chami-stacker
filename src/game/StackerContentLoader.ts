@@ -57,8 +57,8 @@ export function validateStackerContent(data: StackerGameProtocol): string[] {
   if (!(data.renderer?.dangerY > data.stacking?.previewY && data.renderer.dangerY < data.renderer.floorY)) issues.push('renderer.dangerY: previewY와 floorY 사이여야 합니다.');
   if (!(data.renderer?.arenaWidth > 0 && data.renderer.arenaWidth <= data.renderer.width)) issues.push('renderer.arenaWidth: 화면 너비 이하여야 합니다.');
   if (!(data.stacking?.pointsPerChami > data.stacking?.maxPackingBonus)) issues.push('stacking.pointsPerChami: maxPackingBonus보다 커야 합니다.');
-  if (!data.stacking?.sequence?.length) issues.push('stacking.sequence: 차미 순서가 하나 이상 필요합니다.');
-  data.stacking?.sequence?.forEach((id) => { if (!data.pieces[id]) issues.push(`stacking.sequence: 존재하지 않는 차미 '${id}'`); });
+  if (!data.stacking?.bag?.length) issues.push('stacking.bag: 랜덤 주머니에 차미가 하나 이상 필요합니다.');
+  data.stacking?.bag?.forEach((id) => { if (!data.pieces[id]) issues.push(`stacking.bag: 존재하지 않는 차미 '${id}'`); });
   (['start', 'drop', 'milestone', 'danger', 'gameOver'] as const).forEach((key) => {
     if (!data.dialogue?.[key]?.length) issues.push(`dialogue.${key}: 대사가 하나 이상 필요합니다.`);
   });

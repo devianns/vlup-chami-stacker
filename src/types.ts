@@ -22,7 +22,7 @@ export interface StackerGameProtocol {
   game: { id: string; title: string; subtitle: string; version: string };
   renderer: { width: number; height: number; background: string; backgroundImage?: string; arenaWidth: number; floorY: number; dangerY: number };
   physics: { gravityY: number; wallThickness: number; settleVelocity: number; settleMs: number };
-  stacking: { previewY: number; spawnPadding: number; dangerGraceMs: number; nextPreviewCount: number; pointsPerChami: number; maxPackingBonus: number; sequence: string[] };
+  stacking: { previewY: number; spawnPadding: number; dangerGraceMs: number; nextPreviewCount: number; pointsPerChami: number; maxPackingBonus: number; bag: string[] };
   assets: { images: Record<string, ImageAsset> };
   pieces: Record<string, StackerPieceDefinition>;
   presenter: { name: string; idle: string; guide: string; cheer: string };
