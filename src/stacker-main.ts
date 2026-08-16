@@ -73,18 +73,18 @@ document.body.innerHTML = `
         <div class="next-queue"><span>다음 차미</span><div id="next-pieces"></div></div>
         <small>빨간 선을 넘지 않도록 빈틈을 채우세요.<br>위치를 잡고 클릭하면 놓을 수 있어요.<br><kbd>←</kbd> <kbd>→</kbd> <kbd>Space</kbd>도 가능!</small>
       </aside>
-    </section>
-    <div class="mobile-bottom-bar">
-      <div class="game-legal-watermark" aria-hidden="true">
-        <strong>비영리 팬게임 · Original By Creatorbus Inc.</strong>
-        <span>캐릭터·배경·타이틀 등 시각 에셋 제작에 생성형 AI를 사용했습니다.</span>
+      <div class="mobile-bottom-bar">
+        <div class="game-legal-watermark" aria-hidden="true">
+          <strong>비영리 팬게임 · Original By Creatorbus Inc.</strong>
+          <span>캐릭터·배경·타이틀 등 시각 에셋 제작에 생성형 AI를 사용했습니다.</span>
+        </div>
+        <nav class="floating-actions" aria-label="빠른 메뉴">
+          <button id="game-sound" class="sound-toggle game-sound" type="button" aria-pressed="false" aria-label="소리 켜기"><i>🔇</i><span>소리 켜기</span></button>
+          <button id="floating-ranking" class="floating-ranking" type="button" aria-label="전체 순위표 보기"><i>🏆</i><span>전체 순위표</span></button>
+          <button id="floating-notice" class="floating-notice" type="button" aria-label="팬게임 이용 안내"><i>ⓘ</i><span>이용 안내</span></button>
+        </nav>
       </div>
-      <nav class="floating-actions" aria-label="빠른 메뉴">
-        <button id="game-sound" class="sound-toggle game-sound" type="button" aria-pressed="false" aria-label="소리 켜기"><i>🔇</i><span>소리 켜기</span></button>
-        <button id="floating-ranking" class="floating-ranking" type="button" aria-label="전체 순위표 보기"><i>🏆</i><span>전체 순위표</span></button>
-        <button id="floating-notice" class="floating-notice" type="button" aria-label="팬게임 이용 안내"><i>ⓘ</i><span>이용 안내</span></button>
-      </nav>
-    </div>
+    </section>
   </main>
   <dialog id="leaderboard-dialog" class="leaderboard-dialog">
     <form method="dialog" class="leaderboard-head"><div><span>전체 이용자 TOP 20</span><h2>차미 쌓기 전체 순위표</h2></div><div class="ranking-head-actions"><i id="ranking-spinner" class="ui-spinner hidden" aria-label="전체 순위표 불러오는 중"></i><button aria-label="전체 순위표 닫기">×</button></div></form>
