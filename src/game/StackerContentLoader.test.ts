@@ -10,6 +10,10 @@ describe('stacker content protocol', () => {
     expect(validateStackerContent(content)).toEqual([]);
   });
 
+  it('reports a broken top-level JSON value instead of crashing', () => {
+    expect(validateStackerContent(null as never)).toEqual(['게임 설정의 최상위 값은 JSON 객체여야 합니다.']);
+  });
+
   it('rejects a missing piece texture', () => {
     const broken = structuredClone(content);
     broken.pieces.round.texture = 'missing';

@@ -36,10 +36,14 @@ async function request(init?: RequestInit): Promise<LocalScoreEntry[]> {
   const timeout = window.setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
   try {
     const response = await fetch(endpoint, { ...init, signal: controller.signal, headers: { 'Content-Type': 'application/json', ...init?.headers } });
-    const payload = await response.json() as ApiResponse;
+    let payload: ApiResponse;
+    try { payload = await response.json() as ApiResponse; }
+    catch { throw new Error('점수판 서버의 응답을 읽지 못했어요. 잠시 뒤 다시 확인해 주세요.'); }
     if (!response.ok) throw new Error(typeof payload.error === 'string' ? payload.error : '점수판을 불러오지 못했어요.');
     const entries = parseResponse(payload);
-    localStorage.setItem(CACHE_KEY, JSON.stringify({ entries, updatedAt: typeof payload.updatedAt === 'string' ? payload.updatedAt : new Date().toISOString() } satisfies CacheRecord));
+    try {
+      localStorage.setItem(CACHE_KEY, JSON.stringify({ entries, updatedAt: typeof payload.updatedAt === 'string' ? payload.updatedAt : new Date().toISOString() } satisfies CacheRecord));
+    } catch { /* The cache is optional; the successful response remains valid. */ }
     return entries;
   } catch (error) {
     if (error instanceof DOMException && error.name === 'AbortError') throw new Error('점수판 응답이 늦어지고 있어요. 잠시 후 다시 확인해 주세요.');

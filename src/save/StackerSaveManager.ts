@@ -13,15 +13,20 @@ export class StackerSaveManager {
   }
 
   load(): StackerSaveData {
-    const raw = localStorage.getItem(this.key);
-    if (!raw) return this.create();
     try {
+      const raw = localStorage.getItem(this.key);
+      if (!raw) return this.create();
       const parsed = JSON.parse(raw) as Partial<StackerSaveData>;
       if (parsed.contentId !== this.content.game.id) return this.create();
       if (parsed.contentVersion !== this.content.game.version) {
         return { ...this.create(), nickname: typeof parsed.nickname === 'string' ? parsed.nickname : '' };
       }
       const migrated = { ...this.create(), ...parsed, version: 3 as const, contentVersion: this.content.game.version };
+      migrated.bestScore = Number.isSafeInteger(parsed.bestScore) && parsed.bestScore! >= 0 ? parsed.bestScore! : 0;
+      migrated.bestHeight = Number.isSafeInteger(parsed.bestHeight) && parsed.bestHeight! >= 0 ? parsed.bestHeight! : 0;
+      migrated.totalDrops = Number.isSafeInteger(parsed.totalDrops) && parsed.totalDrops! >= 0 ? parsed.totalDrops! : 0;
+      migrated.gamesPlayed = Number.isSafeInteger(parsed.gamesPlayed) && parsed.gamesPlayed! >= 0 ? parsed.gamesPlayed! : 0;
+      migrated.nickname = typeof parsed.nickname === 'string' ? [...parsed.nickname.normalize('NFKC')].slice(0, 12).join('') : '';
       migrated.leaderboard = Array.isArray(parsed.leaderboard)
         ? parsed.leaderboard.filter((entry) => entry.contentVersion === this.content.game.version && Number.isFinite(entry.packingBonus)).slice(0, 20)
         : [];
@@ -31,15 +36,17 @@ export class StackerSaveManager {
     }
   }
 
-  save(data: StackerSaveData): void { localStorage.setItem(this.key, JSON.stringify(data)); }
+  save(data: StackerSaveData): void {
+    try { localStorage.setItem(this.key, JSON.stringify(data)); }
+    catch { /* Strict storage policies must not stop gameplay. */ }
+  }
 
   leaderboard(): LocalScoreEntry[] { return this.load().leaderboard; }
 
   submitScore(nicknameInput: string, state: StackerRunState): LocalScoreEntry[] {
     const nickname = [...nicknameInput.normalize('NFKC').replace(/[<>\u0000-\u001f]/g, '').trim()].slice(0, 12).join('');
-    if (this.load().leaderboard.some((entry) => entry.runSeed === state.runSeed)) {
-      throw new Error('이 기록은 이미 저장했어요.');
-    }
+    const existingSave = this.load();
+    if (existingSave.leaderboard.some((entry) => entry.runSeed === state.runSeed)) return existingSave.leaderboard;
     if (!nickname) throw new Error('닉네임을 한 글자 이상 입력해 주세요.');
     if (!isValidFinalScore(state, this.content.stacking.pointsPerChami, this.content.stacking.maxPackingBonus)) throw new Error('점수 정보를 확인할 수 없어요. 다시 플레이해 주세요.');
     const playedAt = new Date().toISOString();

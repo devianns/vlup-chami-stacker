@@ -156,9 +156,15 @@ async function boot(): Promise<void> {
       const initial = onlineEntries.length ? onlineEntries : saves.leaderboard();
       renderLeaderboard(initial);
       element('#ranking-status').textContent = onlineEntries.length ? '미리 받아 둔 기록이에요. 최신 기록을 확인하고 있어요…' : '최신 기록을 불러오고 있어요…';
-      if (!rankingDialog.open) rankingDialog.showModal();
+      if (!rankingDialog.open) {
+        scene.scene.pause();
+        rankingDialog.showModal();
+      }
       void refreshRanking();
     };
+    rankingDialog.addEventListener('close', () => {
+      if (scene.scene.isPaused()) scene.scene.resume();
+    });
     online.warmup((entries) => { onlineEntries = entries; if (rankingDialog.open) applyOnlineRanking(entries, true); });
     const titleRanking = element<HTMLButtonElement>('#title-ranking');
     titleRanking.disabled = false;
@@ -188,6 +194,8 @@ async function boot(): Promise<void> {
         }
       } catch (error) {
         status.textContent = `${error instanceof Error ? error.message : '온라인에 기록을 저장하지 못했어요.'} 이 브라우저에는 기록을 보관했어요.`;
+        button.disabled = false;
+        button.removeAttribute('data-seed');
       } finally {
         button.classList.remove('is-loading');
       }

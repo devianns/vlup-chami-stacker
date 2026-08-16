@@ -41,12 +41,13 @@ function validatePiece(id: string, piece: StackerPieceDefinition, data: StackerG
 
 export function validateStackerContent(data: StackerGameProtocol): string[] {
   const issues: string[] = [];
+  if (!data || typeof data !== 'object') return ['게임 설정의 최상위 값은 JSON 객체여야 합니다.'];
   if (data.protocolVersion !== 5) issues.push('protocolVersion: 지원 버전은 5입니다.');
   if (!data.game?.id || !data.game?.version || !data.game?.title) issues.push('game.id, game.version, game.title은 필수입니다.');
   if (!data.assets?.images || !data.pieces) return [...issues, 'assets.images와 pieces는 필수입니다.'];
   if (!Object.keys(data.pieces).length) issues.push('pieces: 최소 한 종류가 필요합니다.');
   Object.entries(data.pieces).forEach(([id, piece]) => validatePiece(id, piece, data, issues));
-  if (data.renderer.backgroundImage && !data.assets.images[data.renderer.backgroundImage]) issues.push(`renderer.backgroundImage: 존재하지 않는 이미지 '${data.renderer.backgroundImage}'`);
+  if (data.renderer?.backgroundImage && !data.assets.images[data.renderer.backgroundImage]) issues.push(`renderer.backgroundImage: 존재하지 않는 이미지 '${data.renderer.backgroundImage}'`);
   if (!data.presenter?.name) issues.push('presenter.name은 필수입니다.');
   (['idle', 'guide', 'cheer'] as const).forEach((key) => {
     if (!data.assets.images[data.presenter?.[key]]) issues.push(`presenter.${key}: 존재하지 않는 이미지 '${data.presenter?.[key]}'`);
