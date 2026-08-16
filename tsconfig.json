@@ -22,6 +22,7 @@
     "src/game/ContentLoader.ts",
     "src/game/ContentLoader.test.ts",
     "src/game/StackerContentLoader.test.ts",
+    "src/game/StackerScoring.test.ts",
     "src/game/content.ts",
     "src/save/SaveManager.ts",
     "src/save/SaveManager.test.ts"

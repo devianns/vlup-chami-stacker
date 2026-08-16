@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
-import type { StackerGameProtocol, StackerPieceDefinition, StackerRunState, StackerSaveData } from '../types';
+import type { GameOverReason, StackerGameProtocol, StackerPieceDefinition, StackerRunState, StackerSaveData } from '../types';
+import { comboBonusForDrop, heightBonusFor, totalScore } from './StackerScoring';
 
 type StateHandler = (state: StackerRunState) => void;
 type SaveHandler = (save: StackerSaveData) => void;
@@ -17,11 +18,17 @@ export class StackerScene extends Phaser.Scene {
   private stateHandler?: StateHandler;
   private saveHandler?: SaveHandler;
   private score = 0;
+  private pieceScore = 0;
+  private heightBonus = 0;
+  private comboBonus = 0;
   private height = 0;
   private lives = 0;
   private drops = 0;
   private dangerSince = 0;
   private gameOver = false;
+  private gameOverReason: GameOverReason | null = null;
+  private runSeed = '';
+  private randomState = 1;
   private message = '';
   private saveData: StackerSaveData;
   private lastDropAt = 0;
@@ -57,7 +64,7 @@ export class StackerScene extends Phaser.Scene {
     this.add.text(left + 14, dangerY - 28, '여기까지 쌓이면 큰일', { fontFamily: 'sans-serif', fontSize: '18px', color: '#b85f68' });
 
     this.input.on('pointermove', (pointer: Phaser.Input.Pointer) => this.movePreview(pointer.x));
-    this.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
+    this.input.on('pointerup', (pointer: Phaser.Input.Pointer) => {
       if (this.gameOver) return;
       this.movePreview(pointer.x);
       this.dropPreview();
@@ -80,7 +87,7 @@ export class StackerScene extends Phaser.Scene {
         this.lives -= 1;
         this.message = this.pick('danger');
         changed = true;
-        if (this.lives <= 0) { this.finishRun(); return; }
+        if (this.lives <= 0) { this.finishRun('missed-pieces'); return; }
         if (!this.preview) this.time.delayedCall(250, () => this.spawnPreview());
         continue;
       }
@@ -90,7 +97,8 @@ export class StackerScene extends Phaser.Scene {
           piece.counted = true;
           const definition = this.content.pieces[piece.pieceId!];
           this.drops += 1;
-          this.score += definition.score;
+          this.pieceScore += definition.score;
+          this.comboBonus += comboBonusForDrop(this.drops);
           this.message = this.drops % 5 === 0 ? this.pick('combo') : this.pick('drop');
           this.recalculateHeight();
           changed = true;
@@ -102,7 +110,7 @@ export class StackerScene extends Phaser.Scene {
     const inDanger = this.pieces.some((piece) => piece.counted && piece.y - piece.displayHeight * 0.42 < this.content.renderer.dangerY);
     if (inDanger) {
       if (!this.dangerSince) { this.dangerSince = time; this.message = this.pick('danger'); changed = true; }
-      if (time - this.dangerSince >= this.content.stacking.dangerGraceMs) { this.finishRun(); return; }
+      if (time - this.dangerSince >= this.content.stacking.dangerGraceMs) { this.finishRun('tower-overflow'); return; }
     } else this.dangerSince = 0;
     if (changed) this.emitState();
   }
@@ -122,11 +130,17 @@ export class StackerScene extends Phaser.Scene {
     this.pieces = [];
     this.queue = [];
     this.score = 0;
+    this.pieceScore = 0;
+    this.heightBonus = 0;
+    this.comboBonus = 0;
     this.height = 0;
     this.lives = this.content.stacking.lives;
     this.drops = 0;
     this.dangerSince = 0;
     this.gameOver = false;
+    this.gameOverReason = null;
+    this.runSeed = this.createRunSeed();
+    this.randomState = this.seedNumber(this.runSeed);
     this.message = this.pick('start');
     this.fillQueue();
     this.spawnPreview();
@@ -140,7 +154,7 @@ export class StackerScene extends Phaser.Scene {
   private weightedPiece(): string {
     const entries = Object.entries(this.content.pieces);
     const total = entries.reduce((sum, [, piece]) => sum + piece.weight, 0);
-    let roll = Math.random() * total;
+    let roll = this.nextRandom() * total;
     for (const [id, piece] of entries) { roll -= piece.weight; if (roll <= 0) return id; }
     return entries[entries.length - 1][0];
   }
@@ -194,13 +208,15 @@ export class StackerScene extends Phaser.Scene {
     if (!settled.length) return;
     const top = Math.min(...settled.map((piece) => piece.y - piece.displayHeight * 0.42));
     const nextHeight = Math.max(0, Math.round(this.content.renderer.floorY - top));
-    if (nextHeight > this.height) this.score += Math.round((nextHeight - this.height) * this.content.stacking.heightScoreScale);
     this.height = Math.max(this.height, nextHeight);
+    this.heightBonus = heightBonusFor(this.height, this.content.stacking.heightScoreScale);
+    this.score = totalScore(this.pieceScore, this.heightBonus, this.comboBonus);
   }
 
-  private finishRun(): void {
+  private finishRun(reason: GameOverReason): void {
     if (this.gameOver) return;
     this.gameOver = true;
+    this.gameOverReason = reason;
     this.preview?.destroy();
     this.preview = undefined;
     this.message = this.pick('gameOver');
@@ -220,7 +236,27 @@ export class StackerScene extends Phaser.Scene {
     return Phaser.Utils.Array.GetRandom(this.content.dialogue[key]);
   }
 
+  private createRunSeed(): string {
+    const values = new Uint32Array(2);
+    globalThis.crypto?.getRandomValues?.(values);
+    return `${Date.now().toString(36)}-${values[0].toString(36)}${values[1].toString(36)}`;
+  }
+
+  private seedNumber(seed: string): number {
+    let value = 2166136261;
+    for (let index = 0; index < seed.length; index += 1) value = Math.imul(value ^ seed.charCodeAt(index), 16777619);
+    return value >>> 0 || 1;
+  }
+
+  private nextRandom(): number {
+    this.randomState = (this.randomState + 0x6D2B79F5) >>> 0;
+    let value = this.randomState;
+    value = Math.imul(value ^ value >>> 15, value | 1);
+    value ^= value + Math.imul(value ^ value >>> 7, value | 61);
+    return ((value ^ value >>> 14) >>> 0) / 4294967296;
+  }
+
   private emitState(): void {
-    this.stateHandler?.({ score: this.score, height: this.height, lives: this.lives, drops: this.drops, bestScore: Math.max(this.saveData.bestScore, this.score), nextPieces: [...this.queue].slice(0, this.content.stacking.nextPreviewCount), message: this.message, gameOver: this.gameOver });
+    this.stateHandler?.({ score: this.score, pieceScore: this.pieceScore, heightBonus: this.heightBonus, comboBonus: this.comboBonus, height: this.height, lives: this.lives, drops: this.drops, bestScore: Math.max(this.saveData.bestScore, this.score), nextPieces: [...this.queue].slice(0, this.content.stacking.nextPreviewCount), message: this.message, gameOver: this.gameOver, gameOverReason: this.gameOverReason, runSeed: this.runSeed });
   }
 }

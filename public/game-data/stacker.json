@@ -5,7 +5,7 @@
     "id": "chami-stacker",
     "title": "차미야, 거기 서도 돼?",
     "subtitle": "동글동글 차미를 최대한 엉뚱하게 쌓아 보세요.",
-    "version": "1.0.0"
+    "version": "1.1.0"
   },
   "renderer": {
     "width": 720,

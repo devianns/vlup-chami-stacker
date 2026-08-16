@@ -33,7 +33,7 @@ export interface StackerGameProtocol {
 }
 
 export interface StackerSaveData {
-  version: 1;
+  version: 2;
   contentId: string;
   contentVersion: string;
   bestScore: number;
@@ -41,10 +41,32 @@ export interface StackerSaveData {
   totalDrops: number;
   gamesPlayed: number;
   muted: boolean;
+  nickname: string;
+  leaderboard: LocalScoreEntry[];
+}
+
+export type GameOverReason = 'tower-overflow' | 'missed-pieces';
+
+export interface LocalScoreEntry {
+  id: string;
+  nickname: string;
+  score: number;
+  pieceScore: number;
+  heightBonus: number;
+  comboBonus: number;
+  height: number;
+  drops: number;
+  playedAt: string;
+  runSeed: string;
+  contentVersion: string;
+  checksum: string;
 }
 
 export interface StackerRunState {
   score: number;
+  pieceScore: number;
+  heightBonus: number;
+  comboBonus: number;
   height: number;
   lives: number;
   drops: number;
@@ -52,4 +74,6 @@ export interface StackerRunState {
   nextPieces: string[];
   message: string;
   gameOver: boolean;
+  gameOverReason: GameOverReason | null;
+  runSeed: string;
 }
