@@ -28,11 +28,9 @@ type ScoreInput = {
   checksum?: unknown;
 };
 
-function setCors(response: VercelResponse): void {
-  response.setHeader('Access-Control-Allow-Origin', '*');
-  response.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  response.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+function setResponseHeaders(response: VercelResponse): void {
   response.setHeader('Cache-Control', 'no-store');
+  response.setHeader('X-Content-Type-Options', 'nosniff');
 }
 
 function ensureSchema(): Promise<unknown> {
@@ -110,7 +108,7 @@ async function listScores(): Promise<unknown[]> {
 }
 
 export default async function handler(request: VercelRequest, response: VercelResponse): Promise<void> {
-  setCors(response);
+  setResponseHeaders(response);
   if (request.method === 'OPTIONS') { response.status(204).end(); return; }
   if (!sql) { response.status(503).json({ error: '점수판 서버가 아직 설정되지 않았어요.' }); return; }
 
