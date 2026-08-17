@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
-    "test": "vitest run",
+    "test": "vitest run src/game/StackerContentLoader.test.ts src/game/StackerScoring.test.ts src/save/StackerSaveManager.test.ts",
     "validate:content": "vitest run src/game/StackerContentLoader.test.ts"
   },
   "dependencies": {

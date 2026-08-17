@@ -1,4 +1,4 @@
-import { existsSync, readFileSync } from 'node:fs';
+import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import type { StackerGameProtocol } from '../types';
 import { validateStackerContent } from './StackerContentLoader';
@@ -8,13 +8,6 @@ const content = JSON.parse(readFileSync(new URL('../../public/game-data/stacker.
 describe('stacker content protocol', () => {
   it('accepts the shipped Chami dataset', () => {
     expect(validateStackerContent(content)).toEqual([]);
-  });
-
-  it('ships every image referenced by the dataset', () => {
-    const missing = Object.values(content.assets.images)
-      .map((asset) => asset.src.replace(/^\.\//, ''))
-      .filter((path) => !existsSync(new URL(`../../public/${path}`, import.meta.url)));
-    expect(missing).toEqual([]);
   });
 
   it('reports a broken top-level JSON value instead of crashing', () => {

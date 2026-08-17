@@ -1,17 +1,10 @@
 import Phaser from 'phaser';
-import type { CompletedRunStats, GameOverReason, StackerGameProtocol, StackerPieceDefinition, StackerRunState } from '../types';
+import type { GameOverReason, StackerGameProtocol, StackerPieceDefinition, StackerRunState, StackerSaveData } from '../types';
 import { packingBonusFor, placementQuality, weightedTotalScore } from './StackerScoring';
 
 type StateHandler = (state: StackerRunState) => void;
-type RunCompleteHandler = (result: CompletedRunStats) => number;
+type SaveHandler = (save: StackerSaveData) => void;
 type DropHandler = () => void;
-type RunPhase = 'ready' | 'playing' | 'finished';
-
-interface StackerSceneObserver {
-  onState: StateHandler;
-  onRunComplete: RunCompleteHandler;
-  onDrop?: DropHandler;
-}
 
 interface ChamiPiece extends Phaser.Physics.Matter.Image {
   pieceId?: string;
@@ -23,43 +16,35 @@ export class StackerScene extends Phaser.Scene {
   private preview?: ChamiPiece;
   private pieces: ChamiPiece[] = [];
   private queue: string[] = [];
-  private observer?: StackerSceneObserver;
+  private stateHandler?: StateHandler;
+  private saveHandler?: SaveHandler;
+  private dropHandler?: DropHandler;
   private score = 0;
   private baseScore = 0;
   private packingBonus = 0;
   private packingRate = 0;
+  private packingQualitySum = 0;
   private height = 0;
   private drops = 0;
   private pieceCounts: Record<string, number> = {};
   private dangerSince = 0;
-  private phase: RunPhase = 'ready';
+  private gameOver = false;
   private gameOverReason: GameOverReason | null = null;
   private runSeed = '';
   private bagQueue: string[] = [];
   private randomState = 1;
   private message = '';
-  private sessionBestScore: number;
+  private saveData: StackerSaveData;
   private lastDropAt = 0;
-  private readonly readyPromise: Promise<void>;
-  private resolveReady!: () => void;
-  private rejectReady!: (error: Error) => void;
+  private started = false;
 
-  constructor(private content: StackerGameProtocol, bestScore: number) {
+  constructor(private content: StackerGameProtocol, saveData: StackerSaveData) {
     super('chami-stacker');
-    this.sessionBestScore = bestScore;
-    this.readyPromise = new Promise<void>((resolve, reject) => {
-      this.resolveReady = resolve;
-      this.rejectReady = reject;
-    });
+    this.saveData = { ...saveData };
   }
 
   preload(): void {
-    const gameTextures = new Set(Object.values(this.content.pieces).map((piece) => piece.texture));
-    if (this.content.renderer.backgroundImage) gameTextures.add(this.content.renderer.backgroundImage);
-    gameTextures.forEach((id) => this.load.image(id, this.content.assets.images[id].src));
-    this.load.once('loaderror', (file: { key?: string }) => {
-      this.rejectReady(new Error(`게임 이미지(${file.key ?? '알 수 없음'})를 불러오지 못했어요.`));
-    });
+    Object.entries(this.content.assets.images).forEach(([id, asset]) => this.load.image(id, asset.src));
   }
 
   create(): void {
@@ -85,7 +70,7 @@ export class StackerScene extends Phaser.Scene {
 
     this.input.on('pointermove', (pointer: Phaser.Input.Pointer) => this.movePreview(pointer.x));
     this.input.on('pointerup', (pointer: Phaser.Input.Pointer) => {
-      if (this.phase !== 'playing') return;
+      if (this.gameOver) return;
       this.movePreview(pointer.x);
       this.dropPreview();
     });
@@ -93,12 +78,12 @@ export class StackerScene extends Phaser.Scene {
     this.input.keyboard?.on('keydown-LEFT', () => this.nudgePreview(-28));
     this.input.keyboard?.on('keydown-RIGHT', () => this.nudgePreview(28));
 
-    this.resetRun('ready');
-    this.resolveReady();
+    this.events.on('restart-run', () => this.restartRun());
+    this.resetRun();
   }
 
   update(time: number): void {
-    if (this.phase !== 'playing') return;
+    if (!this.started || this.gameOver) return;
     let changed = false;
     let settledThisFrame = false;
     for (const piece of [...this.pieces]) {
@@ -132,20 +117,18 @@ export class StackerScene extends Phaser.Scene {
     if (changed) this.emitState();
   }
 
-  connect(observer: StackerSceneObserver): void {
-    this.observer = observer;
+  connect(stateHandler: StateHandler, saveHandler: SaveHandler, dropHandler?: DropHandler): void {
+    this.stateHandler = stateHandler;
+    this.saveHandler = saveHandler;
+    this.dropHandler = dropHandler;
     this.emitState();
   }
 
-  waitUntilReady(): Promise<void> { return this.readyPromise; }
+  restartRun(): void { this.resetRun(); }
 
-  restartRun(): void { this.resetRun('playing'); }
+  startRun(): void { this.started = true; }
 
-  startRun(): void {
-    if (this.phase === 'ready') this.phase = 'playing';
-  }
-
-  private resetRun(phase: Exclude<RunPhase, 'finished'>): void {
+  private resetRun(): void {
     this.pieces.forEach((piece) => piece.destroy());
     this.preview?.destroy();
     this.preview = undefined;
@@ -156,11 +139,12 @@ export class StackerScene extends Phaser.Scene {
     this.baseScore = 0;
     this.packingBonus = 0;
     this.packingRate = 0;
+    this.packingQualitySum = 0;
     this.height = 0;
     this.drops = 0;
     this.pieceCounts = {};
     this.dangerSince = 0;
-    this.phase = phase;
+    this.gameOver = false;
     this.gameOverReason = null;
     this.lastDropAt = 0;
     this.runSeed = this.createRunSeed();
@@ -188,7 +172,7 @@ export class StackerScene extends Phaser.Scene {
   }
 
   private spawnPreview(): void {
-    if (this.preview || this.phase === 'finished') return;
+    if (this.preview || this.gameOver) return;
     this.fillQueue();
     const id = this.queue.shift()!;
     this.fillQueue();
@@ -226,7 +210,7 @@ export class StackerScene extends Phaser.Scene {
   }
 
   private movePreview(pointerX: number): void {
-    if (this.phase !== 'playing' || !this.preview) return;
+    if (!this.started || !this.preview) return;
     const definition = this.content.pieces[this.preview.pieceId!];
     const halfArena = this.content.renderer.arenaWidth / 2;
     const min = this.content.renderer.width / 2 - halfArena + definition.width / 2 + this.content.stacking.spawnPadding;
@@ -237,7 +221,7 @@ export class StackerScene extends Phaser.Scene {
   private nudgePreview(amount: number): void { if (this.preview) this.movePreview(this.preview.x + amount); }
 
   private dropPreview(): void {
-    if (this.phase !== 'playing' || !this.preview || this.time.now - this.lastDropAt < 180) return;
+    if (!this.started || !this.preview || this.gameOver || this.time.now - this.lastDropAt < 180) return;
     const piece = this.preview;
     const definition = this.content.pieces[piece.pieceId!];
     this.preview = undefined;
@@ -249,7 +233,7 @@ export class StackerScene extends Phaser.Scene {
     piece.setAngularVelocity((this.nextRandom() * 2 - 1) * (this.content.stacking.randomAngularVelocity ?? 0));
     piece.droppedAt = this.time.now;
     this.pieces.push(piece);
-    this.observer?.onDrop?.();
+    this.dropHandler?.();
     this.emitState();
   }
 
@@ -262,16 +246,22 @@ export class StackerScene extends Phaser.Scene {
   }
 
   private finishRun(reason: GameOverReason): void {
-    if (this.phase === 'finished') return;
-    this.recalculateScoreFromBoard();
-    this.phase = 'finished';
+    if (this.gameOver) return;
+    this.finalizeScoreFromBoard();
+    this.gameOver = true;
     this.gameOverReason = reason;
     this.preview?.destroy();
     this.preview = undefined;
     this.message = this.pick('gameOver');
-    this.sessionBestScore = Math.max(this.sessionBestScore, this.score);
-    const persistedBest = this.observer?.onRunComplete({ score: this.score, height: this.height, drops: this.drops });
-    if (Number.isSafeInteger(persistedBest)) this.sessionBestScore = Math.max(this.sessionBestScore, persistedBest!);
+    this.saveData = {
+      ...this.saveData,
+      contentVersion: this.content.game.version,
+      bestScore: Math.max(this.saveData.bestScore, this.score),
+      bestHeight: Math.max(this.saveData.bestHeight, this.height),
+      totalDrops: this.saveData.totalDrops + this.drops,
+      gamesPlayed: this.saveData.gamesPlayed + 1,
+    };
+    this.saveHandler?.(this.saveData);
     this.emitState();
   }
 
@@ -305,18 +295,22 @@ export class StackerScene extends Phaser.Scene {
     this.drops = eligible.length;
     this.pieceCounts = {};
     eligible.forEach((piece) => { this.pieceCounts[piece.pieceId!] = (this.pieceCounts[piece.pieceId!] ?? 0) + 1; });
-    const packingQualitySum = eligible.reduce((sum, piece) => sum + placementQuality(this.pieceTop(piece), this.content.renderer.dangerY, this.content.renderer.floorY), 0);
+    this.packingQualitySum = eligible.reduce((sum, piece) => sum + placementQuality(this.pieceTop(piece), this.content.renderer.dangerY, this.content.renderer.floorY), 0);
     this.baseScore = Object.entries(this.pieceCounts).reduce((sum, [id, count]) => sum + this.content.pieces[id].points * count, 0);
-    this.packingBonus = packingBonusFor(packingQualitySum, this.drops, this.content.stacking.maxPackingBonus);
-    this.packingRate = this.drops ? Math.round(packingQualitySum / this.drops / 10) : 0;
+    this.packingBonus = packingBonusFor(this.packingQualitySum, this.drops, this.content.stacking.maxPackingBonus);
+    this.packingRate = this.drops ? Math.round(this.packingQualitySum / this.drops / 10) : 0;
     this.score = weightedTotalScore(this.baseScore, this.packingBonus);
     this.recalculateHeight();
     return previous !== `${this.score}|${this.baseScore}|${this.packingBonus}|${this.packingRate}|${this.height}|${this.drops}`;
   }
 
+  private finalizeScoreFromBoard(): void {
+    this.recalculateScoreFromBoard();
+  }
+
   private emitState(): void {
     const nearLimit = this.pieces.some((piece) => piece.counted && this.pieceTop(piece) < this.content.renderer.dangerY + 120);
-    this.observer?.onState({ score: this.score, baseScore: this.baseScore, packingBonus: this.packingBonus, packingRate: this.packingRate, height: this.height, drops: this.drops, pieceCounts: { ...this.pieceCounts }, bestScore: Math.max(this.sessionBestScore, this.score), nextPieces: [...this.queue].slice(0, this.content.stacking.nextPreviewCount), message: this.message, gameOver: this.phase === 'finished', nearLimit, gameOverReason: this.gameOverReason, runSeed: this.runSeed });
+    this.stateHandler?.({ score: this.score, baseScore: this.baseScore, packingBonus: this.packingBonus, packingRate: this.packingRate, height: this.height, drops: this.drops, pieceCounts: { ...this.pieceCounts }, bestScore: Math.max(this.saveData.bestScore, this.score), nextPieces: [...this.queue].slice(0, this.content.stacking.nextPreviewCount), message: this.message, gameOver: this.gameOver, nearLimit, gameOverReason: this.gameOverReason, runSeed: this.runSeed });
   }
 
   private pieceTop(piece: ChamiPiece): number {

@@ -1,13 +1,7 @@
-import type { CompletedRunStats, LocalScoreEntry, StackerGameProtocol, StackerRunState, StackerSaveData } from '../types';
-import { fnv1a, isValidFinalScore, scoreChecksum } from '../game/StackerScoring';
-import { compareRankedScores, MAX_LEADERBOARD_ENTRIES, normalizeLocalLeaderboard } from '../leaderboard/ScoreEntries';
+import type { LocalScoreEntry, StackerGameProtocol, StackerRunState, StackerSaveData } from '../types';
+import { fnv1a, isValidFinalScore } from '../game/StackerScoring';
 
 const PREFIX = 'chami-stacker';
-
-export interface ScoreSubmission {
-  entry: LocalScoreEntry;
-  leaderboard: LocalScoreEntry[];
-}
 
 export class StackerSaveManager {
   constructor(private content: StackerGameProtocol) {}
@@ -15,7 +9,7 @@ export class StackerSaveManager {
   private get key(): string { return `${PREFIX}:${this.content.game.id}`; }
 
   create(): StackerSaveData {
-    return { version: 3, contentId: this.content.game.id, contentVersion: this.content.game.version, bestScore: 0, bestHeight: 0, totalDrops: 0, gamesPlayed: 0, nickname: '', leaderboard: [] };
+    return { version: 3, contentId: this.content.game.id, contentVersion: this.content.game.version, bestScore: 0, bestHeight: 0, totalDrops: 0, gamesPlayed: 0, muted: false, nickname: '', leaderboard: [] };
   }
 
   load(): StackerSaveData {
@@ -33,7 +27,9 @@ export class StackerSaveManager {
       migrated.totalDrops = Number.isSafeInteger(parsed.totalDrops) && parsed.totalDrops! >= 0 ? parsed.totalDrops! : 0;
       migrated.gamesPlayed = Number.isSafeInteger(parsed.gamesPlayed) && parsed.gamesPlayed! >= 0 ? parsed.gamesPlayed! : 0;
       migrated.nickname = typeof parsed.nickname === 'string' ? [...parsed.nickname.normalize('NFKC')].slice(0, 12).join('') : '';
-      migrated.leaderboard = normalizeLocalLeaderboard(parsed.leaderboard, this.content.game.version);
+      migrated.leaderboard = Array.isArray(parsed.leaderboard)
+        ? parsed.leaderboard.filter((entry) => entry.contentVersion === this.content.game.version && Number.isFinite(entry.packingBonus)).slice(0, 20)
+        : [];
       return migrated;
     } catch {
       return this.create();
@@ -47,40 +43,17 @@ export class StackerSaveManager {
 
   leaderboard(): LocalScoreEntry[] { return this.load().leaderboard; }
 
-  recordCompletedRun(result: CompletedRunStats): StackerSaveData {
-    const save = this.load();
-    save.bestScore = Math.max(save.bestScore, result.score);
-    save.bestHeight = Math.max(save.bestHeight, result.height);
-    save.totalDrops += result.drops;
-    save.gamesPlayed += 1;
-    this.save(save);
-    return save;
-  }
-
-  submitScore(nicknameInput: string, state: StackerRunState): ScoreSubmission {
+  submitScore(nicknameInput: string, state: StackerRunState): LocalScoreEntry[] {
     const nickname = [...nicknameInput.normalize('NFKC').replace(/[<>\u0000-\u001f]/g, '').trim()].slice(0, 12).join('');
     const existingSave = this.load();
-    const existingEntry = existingSave.leaderboard.find((entry) => entry.runSeed === state.runSeed);
-    if (existingEntry) return { entry: existingEntry, leaderboard: existingSave.leaderboard };
+    if (existingSave.leaderboard.some((entry) => entry.runSeed === state.runSeed)) return existingSave.leaderboard;
     if (!nickname) throw new Error('닉네임을 한 글자 이상 입력해 주세요.');
     const piecePoints = Object.fromEntries(Object.entries(this.content.pieces).map(([id, piece]) => [id, piece.points]));
     if (!isValidFinalScore(state, piecePoints, this.content.stacking.maxPackingBonus)) throw new Error('점수 정보를 확인할 수 없어요. 다시 플레이해 주세요.');
     const playedAt = new Date().toISOString();
-    const checksumFields = {
-      nickname,
-      score: state.score,
-      baseScore: state.baseScore,
-      packingBonus: state.packingBonus,
-      packingRate: state.packingRate,
-      height: state.height,
-      drops: state.drops,
-      runSeed: state.runSeed,
-      contentVersion: this.content.game.version,
-      playedAt,
-    };
-    const checksum = scoreChecksum(checksumFields);
+    const payload = [nickname, state.score, state.baseScore, state.packingBonus, state.packingRate, state.height, state.drops, state.runSeed, this.content.game.version, playedAt].join('|');
     const entry: LocalScoreEntry = {
-      id: `${Date.now().toString(36)}-${fnv1a(`${state.runSeed}|${checksum}`)}`,
+      id: `${Date.now().toString(36)}-${fnv1a(payload)}`,
       nickname,
       score: state.score,
       baseScore: state.baseScore,
@@ -92,16 +65,16 @@ export class StackerSaveManager {
       playedAt,
       runSeed: state.runSeed,
       contentVersion: this.content.game.version,
-      checksum,
+      checksum: fnv1a(payload),
     };
-    const save = existingSave;
+    const save = this.load();
     save.nickname = nickname;
     save.bestScore = Math.max(save.bestScore, entry.score);
     save.bestHeight = Math.max(save.bestHeight, entry.height);
     save.leaderboard = [...save.leaderboard, entry]
-      .sort(compareRankedScores)
-      .slice(0, MAX_LEADERBOARD_ENTRIES);
+      .sort((a, b) => b.score - a.score || b.packingRate - a.packingRate || b.drops - a.drops || a.playedAt.localeCompare(b.playedAt))
+      .slice(0, 20);
     this.save(save);
-    return { entry, leaderboard: save.leaderboard };
+    return save.leaderboard;
   }
 }

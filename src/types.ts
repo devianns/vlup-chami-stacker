@@ -44,35 +44,27 @@ export interface StackerSaveData {
   bestHeight: number;
   totalDrops: number;
   gamesPlayed: number;
+  muted: boolean;
   nickname: string;
   leaderboard: LocalScoreEntry[];
 }
 
 export type GameOverReason = 'limit-crossed';
 
-export interface LeaderboardEntry {
+export interface LocalScoreEntry {
   id: string;
   nickname: string;
   score: number;
-  packingRate: number;
-  drops: number;
-  playedAt: string;
-  runSeed: string;
-}
-
-export interface LocalScoreEntry extends LeaderboardEntry {
   baseScore: number;
   packingBonus: number;
-  height: number;
-  pieceCounts: Record<string, number>;
-  contentVersion: string;
-  checksum: string;
-}
-
-export interface CompletedRunStats {
-  score: number;
+  packingRate: number;
   height: number;
   drops: number;
+  pieceCounts: Record<string, number>;
+  playedAt: string;
+  runSeed: string;
+  contentVersion: string;
+  checksum: string;
 }
 
 export interface StackerRunState {
