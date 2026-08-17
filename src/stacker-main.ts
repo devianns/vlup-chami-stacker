@@ -10,7 +10,7 @@ import type { LocalScoreEntry, StackerRunState } from './types';
 
 document.body.innerHTML = `
   <section id="title-screen" class="title-screen" aria-labelledby="title-logo">
-    <img id="title-art" class="title-art" alt="시트리와 차미가 함께하는 차미 쌓기 게임" />
+    <img id="title-art" class="title-art" alt="" />
     <div class="title-shade"></div>
     <div class="title-copy">
       <span id="title-eyebrow" class="title-eyebrow">SITRY × CHAMI</span>
